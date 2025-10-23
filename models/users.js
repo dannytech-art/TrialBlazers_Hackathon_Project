@@ -75,6 +75,10 @@ User.init(
       token: {
         type: DataTypes.STRING,
         defaultValue: ''
+      },
+      wallet:{
+        type:DataTypes.NUMBER,
+        defaultValue:0
       }
   },
   {

@@ -3,9 +3,10 @@ require('dotenv').config();
 const express = require('express');
 const app = express();
 const PORT = process.env.PORT || 1010;
+const router = require('./router/paymentRouter')
 const sequelize = require('./database/databases');
 app.use(express.json());
-
+app.use('/payment',router)
 
 
 const startServer = async () => {
