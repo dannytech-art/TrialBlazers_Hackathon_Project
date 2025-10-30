@@ -371,7 +371,7 @@ exports.getAll = async (req, res) => {
 
 exports.update = async (req, res) => {
   try {
-    const { firstName, lastName } = req.body;
+    const { firstName, lastName, bio } = req.body;
     const { id } = req.params;
     const file = req.file;
 
@@ -400,6 +400,7 @@ exports.update = async (req, res) => {
       firstName: firstName ?? user.firstName,
       lastName: lastName ?? user.lastName,
       profileImage,
+      bio: bio ?? null
     };
 
     await user.update(updatedFields);

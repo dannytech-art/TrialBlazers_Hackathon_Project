@@ -8,6 +8,12 @@ exports.applyForErrand = async (req, res) => {
     const { errandId } = req.params; 
     const runnerId = req.user.id; 
 
+    // Check if the User is a Client or Runner before applying for errands
+    const user = await User.findByPk(runnerId)
+    if (user.role === 'Client'){
+      return res.status(400).json({ message: `Sorry ${user.firstName}, only Runners can apply for errands!`})
+    }
+
     // Check if errand exists
     const errand = await Errand.findByPk(errandId);
     if (!errand) {

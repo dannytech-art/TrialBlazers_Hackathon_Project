@@ -49,8 +49,8 @@ RunnerApplication.init(
   },
   {
     sequelize,
-    modelName: 'runnerApplication',
-    tableName: 'runnerApplications',
+    modelName: 'runnerapplication',
+    tableName: 'runnerapplications',
     timestamps: true,
   }
 );
