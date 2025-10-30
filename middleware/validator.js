@@ -102,6 +102,7 @@ exports.postErrandValidator = (req, res, next) => {
       'number.positive': 'Price must be a positive number',
       'any.required': 'Price is required',
     }),
+    attachments: Joi.string().allow(null, '').optional(),
   });
   const { error } = schema.validate(req.body, { abortEarly: true });
   if (error) {

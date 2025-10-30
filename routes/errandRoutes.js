@@ -172,7 +172,7 @@ router.get('/errand/get/:id', getErrandById);
  *   put:
  *     summary: Update an existing errand
  *     tags: [Errands]
- *     description: Update an errand’s details using its ID.
+ *     description: Allows a client to update an existing errand. Only the owner (creator) of the errand can update it. Optionally supports updating the attachment file.
  *     parameters:
  *       - in: path
  *         name: id
@@ -184,30 +184,32 @@ router.get('/errand/get/:id', getErrandById);
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             properties:
- *               assignedTo:
+ *               title:
  *                 type: string
- *                 format: uuid
- *                 example: "a4c5d2f3-b9e0-4e78-9c9a-7c2f6e3d9b10"
- *               status:
- *                 type: string
- *                 enum: [Open, Assigned, Completed, Cancelled]
- *                 example: "Assigned"
- *               pickupAddress:
- *                 type: string
- *                 example: "Lekki, Lagos"
- *               pickupContact:
- *                 type: string
- *                 example: "08098765432"
+ *                 example: "Deliver package to Victoria Island"
  *               description:
  *                 type: string
- *                 example: "Deliver updated package instead"
+ *                 example: "Deliver a new phone package to Victoria Island."
+ *               pickupAddress:
+ *                 type: string
+ *                 example: "Lekki Phase 1, Lagos"
+ *               deliveryAddress:
+ *                 type: string
+ *                 example: "Victoria Island, Lagos"
+ *               pickupContact:
+ *                 type: string
+ *                 example: "08012345678"
  *               price:
  *                 type: number
- *                 example: 3000
+ *                 example: 5000
+ *               attachments:
+ *                 type: string
+ *                 format: binary
+ *                 description: Optional file attachment for the errand (image or document)
  *     responses:
  *       200:
  *         description: Errand updated successfully
@@ -221,12 +223,37 @@ router.get('/errand/get/:id', getErrandById);
  *                   example: "Errand updated successfully"
  *                 data:
  *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                       format: uuid
+ *                     title:
+ *                       type: string
+ *                     description:
+ *                       type: string
+ *                     pickupAddress:
+ *                       type: string
+ *                     deliveryAddress:
+ *                       type: string
+ *                     pickupContact:
+ *                       type: string
+ *                     price:
+ *                       type: number
+ *                     attachments:
+ *                       type: object
+ *                       properties:
+ *                         publicId:
+ *                           type: string
+ *                         url:
+ *                           type: string
+ *       403:
+ *         description: User not allowed to update this errand
  *       404:
  *         description: Errand not found
  *       500:
  *         description: Internal server error
  */
-router.put('/errand/update/:id', updateErrand);
+router.put('/errand/update/:id', authenticated, uploads.single('attachments'), updateErrand);
 
 
 /**
