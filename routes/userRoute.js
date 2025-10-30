@@ -1,7 +1,7 @@
 const { resendCode, login, register, home, forgotPassword, resetPassword, verifyEmail, verifyResetPasswordOtp, changePassword, getOneUser, getAll, update, deleteUser, auth, user, success, failure, makeAdmin } = require('../controllers/userController');
 const { authenticated } = require('../middleware/authenticate');
 const { registerValidator, verifyValidator, resendValidator } = require('../middleware/validator');
-const upload = require('../middleware/multer');
+const uploads = require('../middleware/multer');
 
 const router = require('express').Router();
 
@@ -751,6 +751,9 @@ router.get('/users', getAll);
  *                 type: string
  *                 format: binary
  *                 description: Upload a new profile image (optional)
+ *               bio:
+ *                 type: text
+ *                 example: I like to play football
  *     responses:
  *       200:
  *         description: User updated successfully
@@ -783,12 +786,15 @@ router.get('/users', getAll);
  *                         Url:
  *                           type: string
  *                           example: https://res.cloudinary.com/demo/image/upload/v123456/profile_pics/abc123.jpg
+ *                     bio:
+ *                       type: text
+ *                       example: I like to play football
  *       400:
  *         description: Invalid input or missing required fields
  *       404:
  *         description: User not found
  */
-router.put('/update/:id', upload.single('profileImage'), authenticated, update);
+router.put('/update/:id', uploads.single('profileImage'), authenticated, update);
 
 
 /**
