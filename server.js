@@ -46,8 +46,8 @@ app.use(passport.session());
 
 // ---- ROUTES ----
 app.use('/api/v1', userRouter);
-app.use('/api/v1', paymentRouter);
-app.use('/api/v1', kycRouter);
+app.use('/api/v1/payment', paymentRouter);
+app.use('/api/v1/kyc', kycRouter);
 app.use('/api/v1', errandRouter);
 app.use('/api/v1', messageRouter);
 app.use('/api/v1', applicationRouter);
