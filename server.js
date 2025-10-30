@@ -115,6 +115,16 @@ app.use((error, req, res, next) => {
   next();
 });
 
+app.use((err, req, res, next) => {
+  if (err instanceof multer.MulterError) {
+    return res.status(400).json({ message: err.message });
+  } else if (err) {
+    return res.status(400).json({ message: err.message });
+  }
+  next();
+});
+
+
 // ---- START SERVER ----
 const PORT = process.env.PORT || 1010;
 const startServer = async () => {
