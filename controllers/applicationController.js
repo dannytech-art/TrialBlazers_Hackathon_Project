@@ -7,7 +7,6 @@ exports.applyForErrand = async (req, res) => {
     const { bidPrice, message } = req.body;
     const { errandId } = req.params; 
     const runnerId = req.user.id; 
-
     // Check if the User is a Client or Runner before applying for errands
     const user = await User.findByPk(runnerId)
     if (user.role === 'Client'){
@@ -19,6 +18,8 @@ exports.applyForErrand = async (req, res) => {
     if (!errand) {
       return res.status(404).json({ message: 'Errand not found' });
     }
+     const userExists = await User.findByPk(runnerId);
+    if (!userExists) return res.status(400).json({ message: 'Runner does not exist' });
 
     // Prevent duplicate application
     const existingApp = await Application.findOne({ where: { runnerId, errandId } });
