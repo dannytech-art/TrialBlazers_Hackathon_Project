@@ -14,9 +14,13 @@ passport.use(
     },
     async (req, accessToken, refreshToken, profile, done) => {
       try {
+        console.log(req.query);
+        console.log(req.query.state);
+        
         const state = req.query.state
           ? JSON.parse(Buffer.from(req.query.state, "base64").toString())
           : {};
+
         const { role } = state;
         let token;
         let userData;
@@ -29,7 +33,10 @@ passport.use(
         if (userExist) {
           // ✅ Generate token for existing user
           token = jwt.sign(
-            { id: userExist.id },
+            { 
+              id: userExist.id,
+              role: userExist.role
+            },
             process.env.JWT_SECRET_KEY,
             { expiresIn: "1d" }
           );
@@ -46,16 +53,20 @@ passport.use(
             email: profile._json.email,
             isVerified: profile._json.email_verified,
             password: hashedPassword, // ✅ Hashed password
-            role,
+            role: role,
             bio: "No bio yet",   
           });
 
           // ✅ Generate token for new user
           token = jwt.sign(
-            { id: userData.id },
-            process.env.JWT_SECRET_KEY,
-            { expiresIn: "1d" }
-          );
+          { 
+            id: userData.id,
+            role: userData.role
+          },
+          process.env.JWT_SECRET_KEY,
+          { expiresIn: "1d" }
+        );
+
         }
 
         // ✅ Return both token + user info

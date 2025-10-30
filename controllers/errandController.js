@@ -5,38 +5,49 @@ const fs = require('fs');
 
 exports.createErrand = async (req, res) => {
   try {
-
-     console.log('req.body:', req.body);
+    console.log('req.body:', req.body);
     console.log('req.file:', req.file);
+
     const { title, description, pickupAddress, deliveryAddress, pickupContact, price } = req.body;
     const file = req.file;
-    const user = req.user;
+    const userFromToken = req.user; // This contains only `id` (from JWT)
 
-    if (!user) return res.status(401).json({ message: 'User not authenticated' });
+    if (!userFromToken) {
+      return res.status(401).json({ message: 'User not authenticated' });
+    }
+
+    const fullUser = await User.findByPk(userFromToken.id);
+    if (!fullUser) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (fullUser.role !== 'Client') {
+      return res.status(403).json({ message: 'Only Clients can create errands' });
+    }
 
     if (!title || !description || !pickupAddress || !deliveryAddress || !pickupContact || !price) {
       return res.status(400).json({ message: 'Kindly fill all required fields' });
     }
 
     let image = null;
+    if (file) {
+      const uploadResult = await cloudinary.uploader.upload(file.path, {
+        folder: 'attachments',
+        public_id: `attachment-${Date.now()}`,
+        overwrite: true,
+      });
 
-if (file) {
-  const uploadResult = await cloudinary.uploader.upload(file.path, {
-    folder: 'attachments',
-    public_id: `attachment-${Date.now()}`,
-    overwrite: true,
-  });
-  fs.unlinkSync(file.path);
+      fs.unlinkSync(file.path);
 
-  image = {
-    publicId: uploadResult.public_id,
-    url: uploadResult.secure_url,
-  };
-}
+      image = {
+        publicId: uploadResult.public_id,
+        url: uploadResult.secure_url,
+      };
+    }
 
-
+    // ✅ Create errand using fullUser.id
     const newErrand = await Errand.create({
-      userId: user.id,
+      userId: fullUser.id,
       title,
       description,
       pickupAddress,
@@ -57,11 +68,10 @@ if (file) {
 };
 
 
-
 exports.getAllErrands = async (req, res) => {
   try {
     const errands = await Errand.findAll({
-      include: [{ model: User, attributes: ['id', 'fullname', 'email'] }],
+      include: [{ model: User, attributes: ['id', 'firstName', 'lastName', 'email'] }],
       order: [['createdAt', 'DESC']],
     });
 
@@ -81,7 +91,7 @@ exports.getErrandById = async (req, res) => {
   try {
     const { id } = req.params;
     const foundErrand = await Errand.findByPk(id, {
-      include: [{ model: User, attributes: ['id', 'fullname', 'email'] }],
+      include: [{ model: User, attributes: ['id', 'firstName', 'lastName', 'email'] }],
     });
 
     if (!foundErrand) {
@@ -102,21 +112,56 @@ exports.getErrandById = async (req, res) => {
 
 exports.updateErrand = async (req, res) => {
   try {
+    const user = req.user;
+    const file = req.file;
     const { id } = req.params;
-    const { assignedTo, status, description, pickupAddress, pickupContact, price } = req.body;
+    const { title, description, pickupAddress, deliveryAddress, pickupContact, price } = req.body;
 
     const foundErrand = await Errand.findByPk(id);
     if (!foundErrand) {
       return res.status(404).json({ message: 'Errand not found' });
     }
 
+    if (foundErrand.userId !== user.id) {
+      return res.status(403).json({ message: 'You are not allowed to update this errand' });
+    }
+
+    let updatedImage = foundErrand.attachments;
+
+    if (file) {
+      // If the errand already had an image, delete the old one from Cloudinary
+      if (foundErrand.attachments && foundErrand.attachments.publicId) {
+        try {
+          await cloudinary.uploader.destroy(foundErrand.attachments.publicId);
+        } catch (err) {
+          console.warn('Cloudinary delete failed:', err.message);
+        }
+      }
+
+      // Upload new image to Cloudinary
+      const uploadResult = await cloudinary.uploader.upload(file.path, {
+        folder: 'attachments',
+        public_id: `attachment-${Date.now()}`,
+        overwrite: true,
+      });
+
+      // Delete the local file after upload
+      fs.unlinkSync(file.path);
+
+      updatedImage = {
+        publicId: uploadResult.public_id,
+        url: uploadResult.secure_url,
+      };
+    }
+
     await foundErrand.update({
-      status: status || foundErrand.status,
-      assignedTo: assignedTo || foundErrand.assignedTo,
-      price: price || foundErrand.price,
-      pickupAddress: pickupAddress || foundErrand.pickupAddress,
-      pickupContact: pickupContact || foundErrand.pickupContact,
+      title: title || foundErrand.title,
       description: description || foundErrand.description,
+      pickupAddress: pickupAddress || foundErrand.pickupAddress,
+      deliveryAddress: deliveryAddress || foundErrand.deliveryAddress,
+      pickupContact: pickupContact || foundErrand.pickupContact,
+      price: price ? parseFloat(price) : foundErrand.price,
+      attachments: updatedImage,
     });
 
     res.status(200).json({
@@ -124,12 +169,14 @@ exports.updateErrand = async (req, res) => {
       data: foundErrand,
     });
   } catch (error) {
+    console.error('Update Errand Error:', error);
     res.status(500).json({
       message: 'Internal server error while updating errand',
       error: error.message,
     });
   }
 };
+
 
 exports.deleteErrand = async (req, res) => {
   try {
