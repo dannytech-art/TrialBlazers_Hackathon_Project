@@ -8,11 +8,15 @@ exports.applyForErrand = async (req, res) => {
     const { errandId } = req.params; 
     const runnerId = req.user.id; 
 
+    console.log('Runner ID from token:', runnerId);
+
     // Check if errand exists
     const errand = await Errand.findByPk(errandId);
     if (!errand) {
       return res.status(404).json({ message: 'Errand not found' });
     }
+     const userExists = await User.findByPk(runnerId);
+    if (!userExists) return res.status(400).json({ message: 'Runner does not exist' });
 
     // Prevent duplicate application
     const existingApp = await Application.findOne({ where: { runnerId, errandId } });

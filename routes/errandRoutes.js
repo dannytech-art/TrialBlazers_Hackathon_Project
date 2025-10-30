@@ -7,7 +7,7 @@ const uploads = require('../middleware/multer'); // multer config for file uploa
 
 /**
  * @swagger
- * /api/errand/create:
+ * /api/v1/errand/create:
  *   post:
  *     summary: Create a new errand
  *     tags: [Errands]
@@ -67,12 +67,12 @@ const uploads = require('../middleware/multer'); // multer config for file uploa
  *       500:
  *         description: Server error while creating errand
  */
-router.post('/create', authenticated, uploads.single('attachments'), postErrandValidator, createErrand);
+router.post('/errand/create', authenticated, uploads.single('attachments'), postErrandValidator, createErrand);
 
 
 /**
  * @swagger
- * /api/errand/getall:
+ * /api/v1/errand/getall:
  *   get:
  *     summary: Retrieve all errands
  *     tags: [Errands]
@@ -127,12 +127,12 @@ router.post('/create', authenticated, uploads.single('attachments'), postErrandV
  *       500:
  *         description: Internal server error
  */
-router.get('/getall', getAllErrands);
+router.get('/errand/getall', getAllErrands);
 
 
 /**
  * @swagger
- * /api/errand/get/{id}:
+ * /api/v1/errand/get/{id}:
  *   get:
  *     summary: Get an errand by ID
  *     tags: [Errands]
@@ -163,12 +163,12 @@ router.get('/getall', getAllErrands);
  *       500:
  *         description: Server error while retrieving errand
  */
-router.get('/get/:id', getErrandById);
+router.get('/errand/get/:id', getErrandById);
 
 
 /**
  * @swagger
- * /api/errand/update/{id}:
+ * /api/v1/errand/update/{id}:
  *   put:
  *     summary: Update an existing errand
  *     tags: [Errands]
@@ -226,12 +226,12 @@ router.get('/get/:id', getErrandById);
  *       500:
  *         description: Internal server error
  */
-router.put('/update/:id', updateErrand);
+router.put('/errand/update/:id', updateErrand);
 
 
 /**
  * @swagger
- * /api/errand/delete/{id}:
+ * /api/v1/errand/delete/{id}:
  *   delete:
  *     summary: Delete an errand by ID
  *     tags: [Errands]
@@ -260,6 +260,6 @@ router.put('/update/:id', updateErrand);
  *       500:
  *         description: Internal server error
  */
-router.delete('/delete/:id', deleteErrand);
+router.delete('/errand/delete/:id', deleteErrand);
 
 module.exports = router;

@@ -22,53 +22,50 @@ passport.use(
         let userData;
 
         // ✅ Find user in database
-        let userExist = await User.findOne({
-          where: { email: profile._json.email },
-        });
+        let userExist;
+try {
+  userExist = await User.findOne({ where: { email: profile._json.email } });
+  if (userExist) {
+    console.log("User exists:", userExist.toJSON());
+  } else {
+    // Hash password
+    const hashedPassword = await bcrypt.hash("ErrandHive", 10);
 
-        if (userExist) {
-          // ✅ Generate token for existing user
-          token = jwt.sign(
-            { id: userExist.id },
-            process.env.JWT_SECRET_KEY,
-            { expiresIn: "1d" }
-          );
+    // Create user
+    userExist = await User.create({
+      firstName: profile._json.given_name,
+      lastName: profile._json.family_name,
+      email: profile._json.email,
+      isVerified: profile._json.email_verified,
+      password: hashedPassword,
+      role: role,
+      bio: "No bio yet",
+    });
 
-          userData = userExist;
-        } else {
-          // ✅ Hash password using bcrypt
-          const hashedPassword = await bcrypt.hash("ErrandHive", 10);
+    console.log("New user created:", userExist.toJSON());
+  }
+} catch (err) {
+  console.error("Error finding or creating user:", err);
+  return done(err, null);
+}
 
-          // ✅ Create new user
-          userData = await User.create({
-            firstName: profile._json.given_name,
-            lastName: profile._json.family_name,
-            email: profile._json.email,
-            isVerified: profile._json.email_verified,
-            password: hashedPassword, // ✅ Hashed password
-            role,
-            bio: "No bio yet",   
-          });
+// Generate token for both new or existing user
+token = jwt.sign(
+  { id: userExist.id },
+  process.env.JWT_SECRET_KEY,
+  { expiresIn: "1d" }
+);
 
-          // ✅ Generate token for new user
-          token = jwt.sign(
-            { id: userData.id },
-            process.env.JWT_SECRET_KEY,
-            { expiresIn: "1d" }
-          );
-        }
-
-        // ✅ Return both token + user info
-        return done(null, {
-          token,
-          user: {
-            id: userData.id,
-            firstName: userData.firstName,
-            lastName: userData.lastName,
-            email: userData.email,
-            role: userData.role,
-          },
-        });
+return done(null, {
+  token,
+  user: {
+    id: userExist.id,
+    firstName: userExist.firstName,
+    lastName: userExist.lastName,
+    email: userExist.email,
+    role: userExist.role,
+  },
+});
       } catch (error) {
         console.error("Google Login Error:", error);
         return done(error, null);

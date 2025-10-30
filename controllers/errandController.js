@@ -5,9 +5,14 @@ const fs = require('fs');
 
 exports.createErrand = async (req, res) => {
   try {
+
+     console.log('req.body:', req.body);
+    console.log('req.file:', req.file);
     const { title, description, pickupAddress, deliveryAddress, pickupContact, price } = req.body;
     const file = req.file;
-    const user = req.user; 
+    const user = req.user;
+
+    if (!user) return res.status(401).json({ message: 'User not authenticated' });
 
     if (!title || !description || !pickupAddress || !deliveryAddress || !pickupContact || !price) {
       return res.status(400).json({ message: 'Kindly fill all required fields' });
@@ -15,42 +20,42 @@ exports.createErrand = async (req, res) => {
 
     let image = null;
 
-    if (file) {
-      const uploadResult = await cloudinary.uploader.upload(file.path, {
-        folder: 'attachments',
-        public_id: `attachment-${Date.now()}`,
-        overwrite: true,
-      });
-      fs.unlinkSync(file.path);
+if (file) {
+  const uploadResult = await cloudinary.uploader.upload(file.path, {
+    folder: 'attachments',
+    public_id: `attachment-${Date.now()}`,
+    overwrite: true,
+  });
+  fs.unlinkSync(file.path);
 
-      image = {
-        publicId: uploadResult.public_id,
-        url: uploadResult.secure_url,
-      };
-    }
+  image = {
+    publicId: uploadResult.public_id,
+    url: uploadResult.secure_url,
+  };
+}
+
 
     const newErrand = await Errand.create({
-      userId: user.id, 
+      userId: user.id,
       title,
       description,
       pickupAddress,
       deliveryAddress,
       pickupContact,
-      price,
+      price: parseFloat(price),
       attachments: image,
     });
 
-    res.status(201).json({
-      message: 'Errand created successfully',
-      data: newErrand,
-    });
+    return res.status(201).json({ message: 'Errand created successfully', data: newErrand });
   } catch (error) {
-    res.status(500).json({
+    console.error('Create Errand Error:', error);
+    return res.status(500).json({
       message: 'Internal server error while creating errand',
       error: error.message,
     });
   }
 };
+
 
 
 exports.getAllErrands = async (req, res) => {
