@@ -9,7 +9,7 @@ const { authenticated } = require('../middleware/authenticate');
 
 /**
  * @swagger
- * /api/v1/applications/apply/{errandId}:
+ * /api/v1/apply/{errandId}:
  *   post:
  *     summary: Runner applies for an errand
  *     description: Allows a verified runner to apply for a specific errand by providing a bid price and message.

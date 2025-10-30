@@ -50,7 +50,7 @@ RunnerApplication.init(
   {
     sequelize,
     modelName: 'runnerApplication',
-    tableName: 'runnerApplications',
+    tableName: 'runnerapplications',
     timestamps: true,
   }
 );
