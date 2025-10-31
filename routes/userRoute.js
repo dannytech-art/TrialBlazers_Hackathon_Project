@@ -861,7 +861,7 @@ router.delete('/delete-user/:id', deleteUser);
  *       500:
  *         description: Internal server error
  */
-router.put('/make-admin', makeAdmin)
+router.put('/make-admin/:id', makeAdmin)
 
 
 module.exports = router
