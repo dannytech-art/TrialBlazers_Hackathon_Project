@@ -380,7 +380,7 @@ exports.update = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    let profileImage = user.profileImage;
+    let image = user.profileImage;
 
     if (file && file.path) {
       const result = await cloudinary.uploader.upload(file.path, {
@@ -390,24 +390,24 @@ exports.update = async (req, res) => {
       });
       fs.unlinkSync(file.path); 
 
-      profileImage = {
+      image = {
         publicId: result.public_id,
         url: result.secure_url,
       };
     }
 
     const updatedFields = {
-      firstName: firstName ?? user.firstName,
-      lastName: lastName ?? user.lastName,
-      profileImage,
-      bio: bio ?? null
+      firstName: firstName || user.firstName,
+      lastName: lastName || user.lastName,
+      profileImage: image || user.profileImage,
+      bio: bio || null
     };
 
     await user.update(updatedFields);
 
     res.status(200).json({
       message: 'User updated successfully',
-      data: user,
+      data: updatedFields,
     });
   } catch (error) {
     console.error('Error updating user:', error);
