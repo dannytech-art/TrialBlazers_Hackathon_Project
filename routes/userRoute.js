@@ -837,31 +837,7 @@ router.put('/update/:id', uploads.single('profileImage'), authenticated, update)
  */
 router.delete('/delete-user/:id', deleteUser);
 
-/**
- * @swagger
- * /api/v1/make-admin/{id}:
- *   put:
- *     summary: Promote a user to admin
- *     description: Updates a user's `isAdmin` status to true.
- *     tags: [Users]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         description: ID of the user to promote
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: User promoted to admin successfully
- *       404:
- *         description: User not found
- *       500:
- *         description: Internal server error
- */
-router.put('/make-admin/:id', makeAdmin)
+
 
 
 module.exports = router

@@ -66,11 +66,6 @@ module.exports = {
         allowNull: false,
         defaultValue: true
       },
-      isAdmin: {
-        type: Sequelize.BOOLEAN,
-        allowNull: false,
-        defaultValue: false
-      },
       otpVerified: {
         type: Sequelize.BOOLEAN,
         allowNull: false,

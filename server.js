@@ -15,6 +15,7 @@ const kycRouter = require('./routes/kycRoute');
 const errandRouter = require('./routes/errandRoutes');
 const messageRouter = require('./routes/messageRouter');
 const applicationRouter = require('./routes/applicationRoute');
+const adminRouter = require('./routes/adminRoute')
 
 const app = express();
 const server = http.createServer(app);
@@ -27,7 +28,7 @@ const io = new Server(server, {
   },
 });
 
-// ✅ Import modular Socket.IO logic
+// Import modular Socket.IO logic
 const initializeChatSocket = require('./sockets/chatSocket');
 initializeChatSocket(io);
 
@@ -51,6 +52,7 @@ app.use('/api/v1/kyc', kycRouter);
 app.use('/api/v1', errandRouter);
 app.use('/api/v1', messageRouter);
 app.use('/api/v1', applicationRouter);
+app.use('/api/v1', adminRouter)
 
 
 // Swagger setup here (as in your current code)

@@ -74,10 +74,6 @@ User.init(
       type: DataTypes.BOOLEAN,
       defaultValue: true
       },
-      isAdmin: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: false
-      },
       otpVerified: {
         type: DataTypes.BOOLEAN,
         defaultValue: false
