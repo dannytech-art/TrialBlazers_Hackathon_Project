@@ -142,7 +142,7 @@ exports.login = async (req, res) => {
     const { email, password } = req.body;
 
     const checkUser = await userModel.findOne({ where: { email: email.toLowerCase().trim() } });
-
+    
     if (!checkUser) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
@@ -157,6 +157,7 @@ exports.login = async (req, res) => {
         message: `This email ${checkUser.email} is not verified yet`,
       });
     }
+    console.log(checkUser)
     
     const newUser = {
       id: checkUser.id,
@@ -174,7 +175,7 @@ exports.login = async (req, res) => {
 
     res.status(200).json({
       message: "Login successful",
-      data: newUser,
+      data: checkUser,
       token,
     });
   } catch (error) {
@@ -437,26 +438,6 @@ exports.deleteUser = async (req, res) => {
     }
 };
 
-exports.makeAdmin = async (req, res) => {
-    try {
-        const {id} = req.params;
-        const user = await userModel.findByPk(id);
-        if (user === null) {
-            return res.status(404).json({
-                message: "User not found"
-            })
-        }
-        await user.update({isAdmin: true}, {where: {id}})
-        res.status(200).json({
-            message: "User's role updated to Admin"
-        });
-        } catch (error) {
-        res.status(500).json({
-            message: 'Internal Server Error',
-            error: error.message
-        });
-    }
-};
 
  exports.auth = (req,res,next)=>{
   const {role} = req.query;
