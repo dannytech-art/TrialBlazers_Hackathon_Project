@@ -59,13 +59,28 @@ for (const modelDefiner of modelDefiners) {
   modelDefiner(sequelize);
 }
 
-const {User, Errand, RunnerApplication, Review, Payment} = sequelize.models; 
+const {User, Errand, RunnerApplication, Review, Payment, Wallet, WalletTransaction, RunnerBankDetails} = sequelize.models; 
 
 User.hasMany(Errand, {foreignKey: 'userId'})
 User.hasMany(RunnerApplication, {foreignKey: 'runnerId'});
 User.hasMany(Review, {foreignKey: 'reviewerId'});
+User.hasMany(Payment, {foreignKey: 'userId'})
+User.hasOne(Wallet, { as: 'wallet', foreignKey: 'runnerId' });
+User.hasMany(Payment, { as: 'paymentsMade', foreignKey: 'payerId' });
+User.hasMany(Payment, { as: 'paymentsReceived', foreignKey: 'receiverId' });
+User.hasOne(RunnerBankDetails, { as: 'bankDetails', foreignKey: 'runnerId' });
 
 Errand.belongsTo(User, {foreignKey: 'userId', as: 'poster'});
 Errand.hasMany(RunnerApplication, {foreignKey: 'errandId'});
 Errand.hasOne(Payment, {foreignKey: 'errandId'});
 Errand.hasOne(Review, {foreignKey: 'errandId'});
+
+Payment.belongsTo(User, { as: 'payer', foreignKey: 'payerId' });
+Payment.belongsTo(User, { as: 'receiver', foreignKey: 'receiverId' });
+
+Wallet.hasMany(WalletTransaction, { as: 'transactions', foreignKey: 'walletId' });
+Wallet.belongsTo(User, { as: 'runner', foreignKey: 'runnerId' });
+
+WalletTransaction.belongsTo(Wallet, { as: 'wallet', foreignKey: 'walletId' });
+
+RunnerBankDetails.belongsTo(User, { as: 'runner', foreignKey: 'runnerId' });
