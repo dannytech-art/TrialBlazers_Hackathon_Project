@@ -37,17 +37,6 @@ User.init(
         type: DataTypes.ENUM('Client', 'Runner'),
         allowNull: false
       },
-      profileImage: {
-        type: DataTypes.TEXT,
-        allowNull: true,
-         get() {
-         const rawValue = this.getDataValue('profileImage');
-         return rawValue ? JSON.parse(rawValue) : null;
-       },
-        set(value) {
-       this.setDataValue('profileImage', JSON.stringify(value));
-       }
-      },
       bio: {
         type: DataTypes.TEXT,
         allowNull: true,
@@ -57,7 +46,7 @@ User.init(
       },
       otpExpiredAt: {
         type: DataTypes.DATE
-     },
+      },
       isVerified:{
         type: DataTypes.BOOLEAN,
         defaultValue: false
@@ -71,9 +60,10 @@ User.init(
         defaultValue: 0
       },
       isActive: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: true
+        type: DataTypes.BOOLEAN,
+        defaultValue: true
       },
+      
       otpVerified: {
         type: DataTypes.BOOLEAN,
         defaultValue: false
@@ -82,9 +72,20 @@ User.init(
         type: DataTypes.STRING,
         defaultValue: ''
       },
-  },
-  {
-    sequelize, 
+      profileImage: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+         get() {
+         const rawValue = this.getDataValue('profileImage');
+         return rawValue ? JSON.parse(rawValue) : null;
+       },
+        set(value) {
+       this.setDataValue('profileImage', JSON.stringify(value));
+       }
+      },
+    },
+    {
+      sequelize, 
     modelName: 'Users', 
     timestamps: true
   },

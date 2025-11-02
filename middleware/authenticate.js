@@ -13,7 +13,11 @@ exports.authenticated = async (req, res, next) => {
 
         const user = await userModel.findByPk(decoded.id);
 
-        req.user = decoded;
+        req.user = {id:id,
+            email:email,
+            firstName:firstName,
+            lastName:lastName
+    };
         next();
     } catch (error) {
         if (error instanceof jwt.TokenExpiredError){
