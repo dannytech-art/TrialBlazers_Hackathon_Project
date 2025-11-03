@@ -66,4 +66,3 @@ db.KYC.belongsTo(db.User, {foreignKey: 'userId'});
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
 
-module.exports = db;

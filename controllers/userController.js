@@ -157,7 +157,6 @@ exports.login = async (req, res) => {
         message: `This email ${checkUser.email} is not verified yet`,
       });
     }
-    console.log(checkUser)
     
     const newUser = {
       id: checkUser.id,
@@ -165,6 +164,15 @@ exports.login = async (req, res) => {
       lastName: checkUser.lastName,
       email: checkUser.email,
       role: checkUser.role,
+      profileImage: checkUser.profileImage,
+      bio: checkUser.bio,
+      kycStatus: checkUser.kycStatus,
+      isVerified: checkUser.isVerified,
+      rating: checkUser.rating,
+      totalJobs: checkUser.totalJobs,
+      isActive: checkUser.isActive,
+      createdAt: checkUser.createdAt,
+      updatedAt: checkUser.updatedAt
     };
 
     const token = jwt.sign(
@@ -175,7 +183,7 @@ exports.login = async (req, res) => {
 
     res.status(200).json({
       message: "Login successful",
-      data: checkUser,
+      data: newUser,
       token,
     });
   } catch (error) {

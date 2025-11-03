@@ -5,7 +5,7 @@ const { createErrand, getAllErrands, getErrandById, updateErrand,deleteErrand} =
 
 /**
  * @swagger
- * /api/errand/create:
+ * /api/v1/errand/create:
  *   post:
  *     summary: Create a new errand
  *     tags: [Errands]
@@ -71,7 +71,7 @@ router.post('/create',createErrand)
 
 /**
  * @swagger
- * /api/errand/getall:
+ * /api/v1/errand/getall:
  *   get:
  *     summary: Retrieve all errands
  *     tags: [Errands]
@@ -134,7 +134,7 @@ router.get('/getall',getAllErrands);
 
 /**
  * @swagger
- * /api/errand/get/{id}:
+ * /api/v1/errand/get/{id}:
  *   get:
  *     summary: Get an errand by ID
  *     tags: [Errands]
@@ -210,7 +210,7 @@ router.get('/get/:id', getErrandById);
 
 /**
  * @swagger
- * /api/errand/update/{id}:
+ * /api/v1/errand/update/{id}:
  *   put:
  *     summary: Update an existing errand
  *     tags: [Errands]
@@ -280,7 +280,7 @@ router.put('/update/:id',updateErrand);
 
 /**
  * @swagger
- * /api/errand/delete/{id}:
+ * /api/v1/errand/delete/{id}:
  *   delete:
  *     summary: Delete an errand by ID
  *     tags: [Errands]

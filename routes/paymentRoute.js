@@ -11,9 +11,12 @@ const {
     processWebhook,
     calculateCommissionAmount
 } = require('../controllers/paymentController');
+const { authenticated } = require('../middleware/authenticate');
+
+
 const router = require('express').Router();
 
-const {authenticated} = require('../middleware/authenticate');
+
 
 
 /**
@@ -305,6 +308,7 @@ router.get('/verify/:reference',  authenticated,verifyPaymentStatus);
  *       401:
  *         description: Unauthorized - Invalid or missing token
  */
+
 router.get('/history',  authenticated, getPaymentHistoryByUser);
 
 /**

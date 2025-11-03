@@ -76,7 +76,5 @@ router.post('/signup-admin', createAdmin)
  *                   type: string
  *                   example: Error logging in admin
  */
-
-
 router.post('/login-admin', loginAdmin)
 module.exports = router;
