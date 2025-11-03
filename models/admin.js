@@ -11,14 +11,14 @@ Admin.init(
       allowNull: false,
       primaryKey: true,
       type: DataTypes.UUID,
-      defaultValue: UUIDV4,
+      defaultValue: DataTypes.UUIDV4,
     },
     email: {
       type: DataTypes.STRING,
       allowNull: false,
       unique: true,
       set(value) {
-        // Ensure lowercase and trimmed email before saving
+        // Ensure lowercase and trimmed email before savingrs
         this.setDataValue('email', value.trim().toLowerCase());
       },
     },
