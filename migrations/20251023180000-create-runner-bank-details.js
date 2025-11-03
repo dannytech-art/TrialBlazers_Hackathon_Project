@@ -10,7 +10,7 @@ module.exports = {
         allowNull: false,
         primaryKey: true,
         type: Sequelize.UUID,
-        defaultValue: UUIDV4,
+        defaultValue: Sequelize.UUIDV4,
       },
       runnerId: {
         type: Sequelize.UUID,
