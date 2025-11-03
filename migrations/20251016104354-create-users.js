@@ -38,6 +38,11 @@ module.exports = {
         type: Sequelize.TEXT,
         allowNull: true
       },
+      kycStatus: {
+        type: Sequelize.ENUM('pending', 'approved', 'rejected', 'verified'),
+        allowNull: false,
+        defaultValue: 'pending',
+      },
       otp: {
         type: Sequelize.STRING,
         allowNull: true
