@@ -55,7 +55,7 @@ User.init(
       kycStatus: {
         type: DataTypes.ENUM('pending', 'approved', 'rejected', 'verified'),
         allowNull: false,
-        defaultValue: 'pending',
+        defaultValue: null,
       },
       otp:{
         type: DataTypes.STRING
