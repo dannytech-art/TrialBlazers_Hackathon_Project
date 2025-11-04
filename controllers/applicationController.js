@@ -1,6 +1,7 @@
 const Application = require('../models/runnerapplication');
 const Errand = require('../models/errand');
 const User = require('../models/users');
+const KYC = require('../models/kyc');
 
 exports.applyForErrand = async (req, res) => {
   try {
@@ -9,10 +10,15 @@ exports.applyForErrand = async (req, res) => {
     const runnerId = req.user.id; 
     // Check if the User is a Client or Runner before applying for errands
     const user = await User.findByPk(runnerId)
-    if (user.role === 'Client'){
+    if (user.role !== 'Runner'){
       return res.status(400).json({ message: `Sorry ${user.firstName}, only Runners can apply for errands!`})
     }
 
+    const runnerKYC = await KYC.findByPk(runnerId);
+    console.log(runnerKYC)
+    if (!runnerKYC || runnerKYC.status !== 'verified'){
+      return res.status(400).json({ message: 'Complete KYC verification to apply for errands!'})
+    }
     // Check if errand exists
     const errand = await Errand.findByPk(errandId);
     if (!errand) {

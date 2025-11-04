@@ -32,16 +32,23 @@ module.exports = {
       },
       profileImage: {
         type: Sequelize.TEXT,
-        allowNull: true
-      },
+        allowNull: true,
+        get() {
+          const rawValue = this.getDataValue('profileImage');
+          return rawValue ? JSON.parse(rawValue) : null;
+        },
+        set(value) {
+          this.setDataValue('profileImage', JSON.stringify(value));
+        }
+            },
       bio: {
         type: Sequelize.TEXT,
         allowNull: true
       },
       kycStatus: {
-        type: Sequelize.ENUM('pending', 'approved', 'rejected', 'verified'),
+        type: Sequelize.ENUM('Not completed', 'pending', 'approved', 'rejected', 'verified'),
         allowNull: false,
-        defaultValue: 'pending',
+        defaultValue: 'Not completed',
       },
       otp: {
         type: Sequelize.STRING,
