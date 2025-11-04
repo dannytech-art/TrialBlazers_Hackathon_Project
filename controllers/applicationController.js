@@ -1,7 +1,5 @@
-const Application = require('../models/runnerapplication');
-const Errand = require('../models/errand');
-const User = require('../models/users');
-const KYC = require('../models/kyc');
+const db = require('../models');
+const {RunnerApplication, Errand, User, KYC } = db
 
 exports.applyForErrand = async (req, res) => {
   try {
@@ -14,11 +12,10 @@ exports.applyForErrand = async (req, res) => {
       return res.status(400).json({ message: `Sorry ${user.firstName}, only Runners can apply for errands!`})
     }
 
-    const runnerKYC = await KYC.findByPk(runnerId);
-    console.log(runnerKYC)
-    if (!runnerKYC || runnerKYC.status !== 'verified'){
-      return res.status(400).json({ message: 'Complete KYC verification to apply for errands!'})
-    }
+    // const runnerKYC = await KYC.findByPk(runnerId);
+    // if (!runnerKYC || runnerKYC.status !== 'verified'){
+    //   return res.status(400).json({ message: 'Complete KYC verification to apply for errands!'})
+    // }
     // Check if errand exists
     const errand = await Errand.findByPk(errandId);
     if (!errand) {
@@ -28,13 +25,13 @@ exports.applyForErrand = async (req, res) => {
     if (!userExists) return res.status(400).json({ message: 'Runner does not exist' });
 
     // Prevent duplicate application
-    const existingApp = await Application.findOne({ where: { runnerId, errandId } });
+    const existingApp = await RunnerApplication.findOne({ where: { runnerId, errandId } });
     if (existingApp) {
       return res.status(400).json({ message: 'You have already applied for this errand' });
     }
 
     // Create new application
-    const application = await Application.create({
+    const application = await RunnerApplication.create({
       runnerId,
       errandId,
       message,
@@ -56,11 +53,12 @@ exports.getErrandApplications = async (req, res) => {
   try {
     const { errandId } = req.params;
 
-    const applications = await Application.findAll({
+    const applications = await RunnerApplication.findAll({
       where: { errandId },
       include: [
         {
           model: User,
+          as: 'runner',
           attributes: ['id', 'firstName', 'lastName', 'email'],
         },
       ],
@@ -85,7 +83,7 @@ exports.updateApplicationStatus = async (req, res) => {
       return res.status(400).json({ message: 'Invalid status' });
     }
 
-    const application = await Application.findByPk(id);
+    const application = await RunnerApplication.findByPk(id);
     if (!application) {
       return res.status(404).json({ message: 'Application not found' });
     }
@@ -106,11 +104,12 @@ exports.getRunnerApplications = async (req, res) => {
   try {
     const runnerId = req.user.id;
 
-    const applications = await Application.findAll({
+    const applications = await RunnerApplication.findAll({
       where: { runnerId },
       include: [
         {
           model: Errand,
+          as: 'errand',
           attributes: ['id', 'title', 'description', 'price', 'status'],
         },
       ],

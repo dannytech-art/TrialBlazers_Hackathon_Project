@@ -15,7 +15,7 @@ KYC.init(
       type: DataTypes.UUID,
       allowNull: false,
       references: {
-        model: 'Users',
+        model: 'Admins',
         key: 'id',
       },
       onDelete: 'CASCADE', // ensures KYC is deleted if user is removed
