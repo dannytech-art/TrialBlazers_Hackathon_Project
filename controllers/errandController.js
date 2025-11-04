@@ -1,7 +1,7 @@
-const Errand = require('../models/errand');
-const User = require('../models/users');
 const cloudinary = require('../config/cloudinary');
 const fs = require('fs');
+const db = require('../models');
+const {Errand, User, KYC} = db
 
 exports.createErrand = async (req, res) => {
   try {
@@ -25,6 +25,12 @@ exports.createErrand = async (req, res) => {
       return res.status(403).json({ message: 'Only Clients can create errands' });
     }
 
+    const clientKYC = await KYC.findByPk(userFromToken.id);
+    
+    if (!clientKYC || clientKYC.status !== 'verified'){
+      return res.status(400).json({ message: 'Complete KYC verification to post an errand!'})
+    }
+
     if (!title || !description || !pickupAddress || !deliveryAddress || !pickupContact || !price) {
       return res.status(400).json({ message: 'Kindly fill all required fields' });
     }
@@ -45,7 +51,7 @@ exports.createErrand = async (req, res) => {
       };
     }
 
-    // ✅ Create errand using fullUser.id
+    // Create errand using fullUser.id
     const newErrand = await Errand.create({
       userId: fullUser.id,
       title,
@@ -187,7 +193,7 @@ exports.deleteErrand = async (req, res) => {
       return res.status(404).json({ message: 'Errand not found' });
     }
 
-    await foundErrand.destroy();
+    await foundErrand.destroy({where: {id}});
 
     res.status(200).json({
       message: 'Errand deleted successfully',
