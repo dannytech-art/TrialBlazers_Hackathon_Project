@@ -9,7 +9,7 @@ KYC.init(
       allowNull: false,
       primaryKey: true,
       type: DataTypes.UUID,
-      defaultValue: UUIDV4,
+      defaultValue: DataTypes.UUIDV4,
     },
     userId: {
       type: DataTypes.UUID,
