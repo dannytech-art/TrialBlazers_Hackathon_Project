@@ -162,7 +162,7 @@ router.get('/my', authenticated, getMyKYC);
 
 /**
  * @swagger
- * /kyc:
+ * /api/v1/kyc:
  *   get:
  *     summary: Get all KYC submissions (Admin only)
  *     description: Fetch all user KYC submissions, including basic user details. Accessible only by admins.
@@ -231,7 +231,7 @@ router.get('/my', authenticated, getMyKYC);
  *       500:
  *         description: Internal Server Error
  */
-router.get('/', authenticated, isAdmin, getAllKYC);
+router.get('/', isAdmin, getAllKYC);
 
 /**
  * @swagger
@@ -313,6 +313,6 @@ router.get('/', authenticated, isAdmin, getAllKYC);
  *       500:
  *         description: Internal Server Error
  */
-router.put('/:id/status', authenticated, isAdmin, updateKYCStatus);
+router.put('/:id/status', isAdmin, updateKYCStatus);
 
 module.exports = router;
