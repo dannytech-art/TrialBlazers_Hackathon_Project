@@ -44,11 +44,7 @@ User.init(
       kycStatus: {
         type: DataTypes.ENUM('pending', 'approved', 'rejected', 'verified'),
         allowNull: false,
-
         defaultValue: 'Not completed',
-
-        defaultValue: null,
-
       },
       otp:{
         type: DataTypes.STRING
@@ -99,6 +95,14 @@ User.init(
     timestamps: true
   },
 );
+User.associate = (models) => {
+  // A user (runner) can have many applications
+  User.hasMany(models.RunnerApplication, {
+    foreignKey: 'runnerId',
+    as: 'applications',
+  });
+};
+
 
 
 module.exports = User;

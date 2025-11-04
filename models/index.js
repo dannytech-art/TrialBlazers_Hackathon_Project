@@ -66,3 +66,18 @@ db.KYC.belongsTo(db.User, {foreignKey: 'userId'});
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
 
+
+
+
+
+
+// ✅ Connect associations automatically
+// Object.keys(db).forEach((modelName) => {
+//   if (db[modelName].associate) {
+//     db[modelName].associate(db);
+//   }
+// });
+
+module.exports = db;
+
+
