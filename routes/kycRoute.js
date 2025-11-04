@@ -1,5 +1,9 @@
 const router = require('express').Router();
+
 const uploads = require('../middleware/multer');
+
+const upload = require('../middleware/multer');
+
 const { authenticated, isAdmin } = require('../middleware/authenticate');
 const {
   submitKYC,
@@ -88,12 +92,17 @@ const {
  *         description: Internal Server Error
  */
 router.post(
-  '/submit', authenticated, uploads.fields([
+
+ 
+
+  '/submit', authenticated, upload.fields([
+
     { name: 'governmentIdCard', maxCount: 1 },
     { name: 'proofOfAddressImage', maxCount: 1 },
     { name: 'selfieWithIdCard', maxCount: 1 },
   ]),
   submitKYC
+
 );
 
 /**

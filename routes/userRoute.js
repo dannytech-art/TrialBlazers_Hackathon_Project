@@ -1,7 +1,10 @@
-const { resendCode, login, register, home, forgotPassword, resetPassword, verifyEmail, verifyResetPasswordOtp, changePassword, getOneUser, getAll, update, deleteUser, auth, user, success, failure, makeAdmin } = require('../controllers/userController');
+const { resendCode, login, register, home, forgotPassword, resetPassword, verifyEmail, verifyResetPasswordOtp, changePassword, getOneUser, getAll, update, deleteUser, auth, user, success, failure} = require('../controllers/userController');
+// const {makeAdmin} = require('../controllers/adminController')
 const { authenticated } = require('../middleware/authenticate');
 const { registerValidator, verifyValidator, resendValidator } = require('../middleware/validator');
+
 const uploads = require('../middleware/multer');
+
 
 const router = require('express').Router();
 
@@ -786,15 +789,20 @@ router.get('/users', getAll);
  *                         Url:
  *                           type: string
  *                           example: https://res.cloudinary.com/demo/image/upload/v123456/profile_pics/abc123.jpg
+
  *                     bio:
  *                       type: text
  *                       example: I like to play football
+
  *       400:
  *         description: Invalid input or missing required fields
  *       404:
  *         description: User not found
  */
+
 router.put('/update/:id', uploads.single('profileImage'), authenticated, update);
+
+
 
 
 /**
@@ -836,6 +844,32 @@ router.put('/update/:id', uploads.single('profileImage'), authenticated, update)
  *                   example: User not found
  */
 router.delete('/delete-user/:id', deleteUser);
+
+/**
+ * @swagger
+ * /api/v1/make-admin/{id}:
+ *   put:
+ *     summary: Promote a user to admin
+ *     description: Updates a user's `isAdmin` status to true.
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID of the user to promote
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: User promoted to admin successfully
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Internal server error
+ */
+// router.put('/make-admin', makeAdmin);
 
 
 

@@ -19,7 +19,7 @@ RunnerBankDetails.init(
     bankCode: {
       type: DataTypes.STRING,
       allowNull: false,
-      comment: 'Bank code (e.g., "033" for First Bank)'
+      comment: 'Bank code',
     },
     bankName: {
       type: DataTypes.STRING,

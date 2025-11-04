@@ -13,6 +13,7 @@ exports.authenticated = async (req, res, next) => {
         const decoded = await jwt.verify(token, process.env.JWT_SECRET_KEY);
         const user = await userModel.findByPk(decoded.id);
 
+
         if (!user) {
             return res.status(401).json({ message: 'User not found' });
             }
@@ -25,6 +26,7 @@ exports.authenticated = async (req, res, next) => {
     };
 
     next();
+
     } catch (error) {
         if (error instanceof jwt.TokenExpiredError){
             return res.status(401).json({
