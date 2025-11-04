@@ -31,8 +31,6 @@ const WalletTransaction = require('./wallettransaction');
 const RunnerBankDetails = require('./runnerbankdetails');
 const RunnerApplication = require('./runnerapplication');
 
-const db = {};
-
 // Register models
 db.Admin = Admin;
 db.User = User;

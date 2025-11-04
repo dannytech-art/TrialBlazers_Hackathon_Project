@@ -69,7 +69,6 @@ const uploads = require('../middleware/multer'); // multer config for file uploa
  */
 router.post('/errand/create', authenticated, uploads.single('attachments'), postErrandValidator, createErrand);
 
-
 /**
  * @swagger
  * /api/v1/errand/getall:
@@ -129,7 +128,6 @@ router.post('/errand/create', authenticated, uploads.single('attachments'), post
  */
 router.get('/errand/getall', getAllErrands);
 
-
 /**
  * @swagger
  * /api/v1/errand/get/{id}:
@@ -164,7 +162,6 @@ router.get('/errand/getall', getAllErrands);
  *         description: Server error while retrieving errand
  */
 router.get('/errand/get/:id', getErrandById);
-
 
 /**
  * @swagger
@@ -254,7 +251,6 @@ router.get('/errand/get/:id', getErrandById);
  *         description: Internal server error
  */
 router.put('/errand/update/:id', authenticated, uploads.single('attachments'), updateErrand);
-
 
 /**
  * @swagger
