@@ -1,9 +1,7 @@
-const KYC = require('../models/kyc');
-const userModel = require('../models/users');
-const User = require('../models/users'); 
 const cloudinary = require('../config/cloudinary')
 const fs = require('fs');
-const { where } = require('sequelize');
+const db = require('../models');
+const {KYC, User} = db
 
 exports.submitKYC = async (req, res) => {
   try {
@@ -76,7 +74,7 @@ exports.getMyKYC = async (req, res) => {
 exports.getAllKYC = async (req, res) => {
   try {
     const kycs = await KYC.findAll({
-      include: [{ model: User, attributes: ['id', 'firstName', 'lastName', 'email'] }],
+      include: [{ model: User, as: 'user', attributes: ['id', 'firstName', 'lastName', 'email'] }],
       order: [['createdAt', 'DESC']],
     });
 
@@ -108,7 +106,7 @@ exports.updateKYCStatus = async (req, res) => {
       kycStatus: "verified"
     }
     await kyc.update({ status, reviewedBy: req.admin.id });
-    await userModel.update(updateKYC, {where: {id: kyc.userId}})
+    await User.update(updateKYC, {where: {id: kyc.userId}})
 
     res.status(200).json({
       message: `KYC ${status} successfully`,
