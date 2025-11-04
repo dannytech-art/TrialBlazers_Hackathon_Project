@@ -53,7 +53,7 @@ User.init(
         allowNull: true,
       },
       kycStatus: {
-        type: DataTypes.ENUM('pending', 'approved', 'rejected', 'verified'),
+        type: DataTypes.ENUM('Not completed', 'pending', 'approved', 'rejected', 'verified'),
         allowNull: false,
         defaultValue: 'Not completed',
       },
