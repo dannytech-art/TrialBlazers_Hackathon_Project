@@ -5,12 +5,10 @@ const {Errand, User, KYC} = db
 
 exports.createErrand = async (req, res) => {
   try {
-    console.log('req.body:', req.body);
-    console.log('req.file:', req.file);
-
     const { title, description, pickupAddress, deliveryAddress, pickupContact, price } = req.body;
     const file = req.file;
     const userFromToken = req.user; // This contains only `id` (from JWT)
+    const userId = req.user.id
 
     if (!userFromToken) {
       return res.status(401).json({ message: 'User not authenticated' });
@@ -23,12 +21,12 @@ exports.createErrand = async (req, res) => {
 
     if (fullUser.role !== 'Client') {
       return res.status(403).json({ message: 'Only Clients can create errands' });
-    }
+    };
 
-    const clientKYC = await KYC.findByPk(userFromToken.id);
+    const clientKYC = await KYC.findOne({where: {userId}});
     
     if (!clientKYC || clientKYC.status !== 'verified'){
-      return res.status(400).json({ message: 'Complete KYC verification to post an errand!'})
+      return res.status(400).json({ message: 'Complete your KYC verification to post an errand!'})
     }
 
     if (!title || !description || !pickupAddress || !deliveryAddress || !pickupContact || !price) {
