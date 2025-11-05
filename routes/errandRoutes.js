@@ -372,3 +372,4 @@ router.delete('/errand/delete/:id', deleteErrand);
 router.get('/errand/my-errands', authenticated, getErrandByClientId);
 
 module.exports = router;
+
