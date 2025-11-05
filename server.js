@@ -7,6 +7,7 @@ const cors = require('cors');
 const sequelize = require('./database/databases');
 const session = require('express-session');
 const passport = require('passport');
+// const schedulePayment = require('./controllers/postPaymentController')
 
 // Routers
 const userRouter = require('./routes/userRoute');
@@ -15,7 +16,8 @@ const kycRouter = require('./routes/kycRoute');
 const errandRouter = require('./routes/errandRoutes');
 const messageRouter = require('./routes/messageRouter');
 const applicationRouter = require('./routes/applicationRoute');
-const adminRouter = require('./routes/adminRoute')
+const adminRouter = require('./routes/adminRoute');
+const processMondayPayments = require('./routes/schedulepayment');
 
 const app = express();
 const server = http.createServer(app);
@@ -52,7 +54,12 @@ app.use('/api/v1/kyc', kycRouter);
 app.use('/api/v1', errandRouter);
 app.use('/api/v1', messageRouter);
 app.use('/api/v1', applicationRouter);
-app.use('/api/v1', adminRouter)
+app.use('/api/v1', adminRouter);
+
+app.use('/api/v1', processMondayPayments);
+
+
+
 
 
 // Swagger setup here (as in your current code)
@@ -117,6 +124,7 @@ app.use((error, req, res, next) => {
   next();
 });
 
+
 app.use((err, req, res, next) => {
   if (err instanceof multer.MulterError) {
     return res.status(400).json({ message: err.message });
@@ -127,7 +135,7 @@ app.use((err, req, res, next) => {
 });
 
 
-// ---- START SERVER ----
+// ---- START SERVER --
 const PORT = process.env.PORT || 1010;
 const startServer = async () => {
   try {
