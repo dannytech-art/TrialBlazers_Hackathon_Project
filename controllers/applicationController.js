@@ -12,10 +12,12 @@ exports.applyForErrand = async (req, res) => {
       return res.status(400).json({ message: `Sorry ${user.firstName}, only Runners can apply for errands!`})
     }
 
-    // const runnerKYC = await KYC.findByPk(runnerId);
-    // if (!runnerKYC || runnerKYC.status !== 'verified'){
-    //   return res.status(400).json({ message: 'Complete KYC verification to apply for errands!'})
-    // }
+    const runnerKYC = await KYC.findOne({where: {userId: runnerId}});
+    
+    if (!runnerKYC || runnerKYC.status !== 'verified'){
+      return res.status(400).json({ message: 'Complete KYC verification to apply for errands!'})
+    }
+
     // Check if errand exists
     const errand = await Errand.findByPk(errandId);
     if (!errand) {
