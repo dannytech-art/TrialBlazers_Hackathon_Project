@@ -15,7 +15,7 @@ exports.applyForErrand = async (req, res) => {
     const runnerKYC = await KYC.findOne({where: {userId: runnerId}});
     
     if (!runnerKYC || runnerKYC.status !== 'verified'){
-      return res.status(400).json({ message: 'Complete KYC verification to apply for errands!'})
+      return res.status(400).json({ message: 'Complete your KYC verification to apply for errands!'})
     }
 
     // Check if errand exists

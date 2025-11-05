@@ -1,7 +1,9 @@
-const express = require('express')
+const express = require('express');
 const router = express.Router();
-const { createErrand, getAllErrands, getErrandById, updateErrand,deleteErrand} = require('../controllers/errandController')
-
+const { createErrand, getAllErrands, getErrandById, updateErrand, deleteErrand } = require('../controllers/errandController');
+const { postErrandValidator } = require('../middleware/validator');
+const { authenticated } = require('../middleware/authenticate');
+const uploads = require('../middleware/multer'); // multer config for file uploads
 
 /**
  * @swagger
@@ -9,45 +11,44 @@ const { createErrand, getAllErrands, getErrandById, updateErrand,deleteErrand} =
  *   post:
  *     summary: Create a new errand
  *     tags: [Errands]
- *     description: This endpoint allows a user to create a new errand request.
+ *     description: Allows an authenticated user to create a new errand request. Supports file upload for attachments.
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             required:
- *               - userId
  *               - title
- *               - category
- *               - intruction
  *               - description
- *               - location
+ *               - pickupAddress
+ *               - deliveryAddress
+ *               - pickupContact
  *               - price
  *             properties:
- *               userId:
- *                 type: string
- *                 format: uuid
- *                 example: "d7e1a22c-2b91-4e49-8b6f-153f9b0936d5"
  *               title:
  *                 type: string
- *                 example: "Pick up my dry cleaning"
- *               category:
- *                 type: string
- *                 enum: [accessories, food stuff, medicine, cream]
- *                 example: "accessories"
- *               intruction:
- *                 type: string
- *                 example: "Go to XYZ Dry Cleaners and pick up my clothes"
+ *                 example: "Deliver documents to the office"
  *               description:
  *                 type: string
- *                 example: "Please pick up 3 shirts and 2 trousers from XYZ Dry Cleaners at 5 PM"
- *               location:
+ *                 example: "Pick up files from my house and deliver them to the company"
+ *               pickupAddress:
  *                 type: string
- *                 example: "Lagos Mainland"
+ *                 example: "Lekki Phase 1, Lagos"
+ *               deliveryAddress:
+ *                 type: string
+ *                 example: "Victoria Island, Lagos"
+ *               pickupContact:
+ *                 type: string
+ *                 example: "08012345678"
  *               price:
  *                 type: number
  *                 example: 2500
+ *               attachments:
+ *                 type: string
+ *                 format: binary
  *     responses:
  *       201:
  *         description: Errand created successfully
@@ -62,11 +63,11 @@ const { createErrand, getAllErrands, getErrandById, updateErrand,deleteErrand} =
  *                 data:
  *                   type: object
  *       400:
- *         description: Invalid request data
+ *         description: Missing or invalid data
  *       500:
- *         description: Server error
+ *         description: Server error while creating errand
  */
-router.post('/create',createErrand)
+router.post('/errand/create', authenticated, uploads.single('attachments'), postErrandValidator, createErrand);
 
 /**
  * @swagger
@@ -74,7 +75,7 @@ router.post('/create',createErrand)
  *   get:
  *     summary: Retrieve all errands
  *     tags: [Errands]
- *     description: Fetch a list of all errands created by users. You can use this endpoint to display all errands in the system.
+ *     description: Fetches a list of all errands created by users.
  *     responses:
  *       200:
  *         description: List of all errands retrieved successfully
@@ -85,7 +86,7 @@ router.post('/create',createErrand)
  *               properties:
  *                 message:
  *                   type: string
- *                   example: "All errands fetched successfully"
+ *                   example: "All errands retrieved successfully"
  *                 data:
  *                   type: array
  *                   items:
@@ -97,27 +98,24 @@ router.post('/create',createErrand)
  *                         example: "e3f9d7e0-82c6-4a7f-94d5-0b44f9c85f21"
  *                       userId:
  *                         type: string
- *                         format: uuid
- *                         example: "f8b61d2a-ef3a-4b4b-9a1d-cc7d3e33f412"
+ *                         example: "a9c3b5d7-ef2a-43de-9104-1d8c7f1b7e55"
  *                       title:
  *                         type: string
- *                         example: "Buy groceries from Shoprite"
- *                       category:
+ *                         example: "Deliver groceries"
+ *                       pickupAddress:
  *                         type: string
- *                         enum: [accessories, food stuff, medicine, cream]
- *                         example: "food stuff"
- *                       description:
+ *                         example: "Yaba, Lagos"
+ *                       deliveryAddress:
  *                         type: string
- *                         example: "Get rice, beans, and oil"
- *                       location:
+ *                         example: "Ikeja, Lagos"
+ *                       pickupContact:
  *                         type: string
- *                         example: "Abuja Central"
+ *                         example: "08123456789"
  *                       price:
  *                         type: number
- *                         example: 4000
+ *                         example: 3500
  *                       status:
  *                         type: string
- *                         enum: [Open, Assigned, Completed, Cancelled]
  *                         example: "Open"
  *                       createdAt:
  *                         type: string
@@ -128,14 +126,15 @@ router.post('/create',createErrand)
  *       500:
  *         description: Internal server error
  */
-router.get('/getall',getAllErrands);
+router.get('/errand/getall', getAllErrands);
+
 /**
  * @swagger
  * /api/v1/errand/get/{id}:
  *   get:
  *     summary: Get an errand by ID
  *     tags: [Errands]
- *     description: Retrieve a single errand using its unique ID.
+ *     description: Retrieve details of a specific errand by its unique ID.
  *     parameters:
  *       - in: path
  *         name: id
@@ -144,7 +143,6 @@ router.get('/getall',getAllErrands);
  *         schema:
  *           type: string
  *           format: uuid
- *           example: "b9e6f8a1-1c2b-4d39-a3d3-82d59b3f241a"
  *     responses:
  *       200:
  *         description: Errand retrieved successfully
@@ -155,54 +153,15 @@ router.get('/getall',getAllErrands);
  *               properties:
  *                 message:
  *                   type: string
- *                   example: "Errand fetched successfully"
+ *                   example: "Errand retrieved successfully"
  *                 data:
  *                   type: object
- *                   properties:
- *                     id:
- *                       type: string
- *                       format: uuid
- *                       example: "b9e6f8a1-1c2b-4d39-a3d3-82d59b3f241a"
- *                     userId:
- *                       type: string
- *                       format: uuid
- *                       example: "f8b61d2a-ef3a-4b4b-9a1d-cc7d3e33f412"
- *                     title:
- *                       type: string
- *                       example: "Pick up medicine from pharmacy"
- *                     category:
- *                       type: string
- *                       enum: [accessories, food stuff, medicine, cream]
- *                       example: "medicine"
- *                     description:
- *                       type: string
- *                       example: "Collect paracetamol and vitamins"
- *                     location:
- *                       type: string
- *                       example: "Ikeja, Lagos"
- *                     price:
- *                       type: number
- *                       example: 2000
- *                     status:
- *                       type: string
- *                       enum: [Open, Assigned, Completed, Cancelled]
- *                       example: "Assigned"
- *                     assignedTo:
- *                       type: string
- *                       format: uuid
- *                       example: "a4c5d2f3-b9e0-4e78-9c9a-7c2f6e3d9b10"
- *                     createdAt:
- *                       type: string
- *                       format: date-time
- *                       example: "2025-10-24T10:15:30Z"
  *       404:
  *         description: Errand not found
- *       400:
- *         description: Invalid ID format
  *       500:
- *         description: Internal server error
+ *         description: Server error while retrieving errand
  */
-router.get('/get/:id', getErrandById);
+router.get('/errand/get/:id', getErrandById);
 
 /**
  * @swagger
@@ -210,7 +169,7 @@ router.get('/get/:id', getErrandById);
  *   put:
  *     summary: Update an existing errand
  *     tags: [Errands]
- *     description: Update the details of an existing errand using its ID.
+ *     description: Allows a client to update an existing errand. Only the owner (creator) of the errand can update it. Optionally supports updating the attachment file.
  *     parameters:
  *       - in: path
  *         name: id
@@ -219,38 +178,35 @@ router.get('/get/:id', getErrandById);
  *         schema:
  *           type: string
  *           format: uuid
- *           example: "b9e6f8a1-1c2b-4d39-a3d3-82d59b3f241a"
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             properties:
  *               title:
  *                 type: string
- *                 example: "Buy household groceries"
- *               category:
- *                 type: string
- *                 enum: [accessories, food stuff, medicine, cream]
- *                 example: "food stuff"
+ *                 example: "Deliver package to Victoria Island"
  *               description:
  *                 type: string
- *                 example: "Get rice, beans, and detergent from the market"
- *               location:
+ *                 example: "Deliver a new phone package to Victoria Island."
+ *               pickupAddress:
  *                 type: string
- *                 example: "Abuja, Nigeria"
+ *                 example: "Lekki Phase 1, Lagos"
+ *               deliveryAddress:
+ *                 type: string
+ *                 example: "Victoria Island, Lagos"
+ *               pickupContact:
+ *                 type: string
+ *                 example: "08012345678"
  *               price:
  *                 type: number
- *                 example: 4500
- *               status:
+ *                 example: 5000
+ *               attachments:
  *                 type: string
- *                 enum: [Open, Assigned, Completed, Cancelled]
- *                 example: "Assigned"
- *               assignedTo:
- *                 type: string
- *                 format: uuid
- *                 example: "f8b61d2a-ef3a-4b4b-9a1d-cc7d3e33f412"
+ *                 format: binary
+ *                 description: Optional file attachment for the errand (image or document)
  *     responses:
  *       200:
  *         description: Errand updated successfully
@@ -263,15 +219,38 @@ router.get('/get/:id', getErrandById);
  *                   type: string
  *                   example: "Errand updated successfully"
  *                 data:
- *                   $ref: '#/components/schemas/Errand'
- *       400:
- *         description: Invalid request body or parameters
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                       format: uuid
+ *                     title:
+ *                       type: string
+ *                     description:
+ *                       type: string
+ *                     pickupAddress:
+ *                       type: string
+ *                     deliveryAddress:
+ *                       type: string
+ *                     pickupContact:
+ *                       type: string
+ *                     price:
+ *                       type: number
+ *                     attachments:
+ *                       type: object
+ *                       properties:
+ *                         publicId:
+ *                           type: string
+ *                         url:
+ *                           type: string
+ *       403:
+ *         description: User not allowed to update this errand
  *       404:
  *         description: Errand not found
  *       500:
  *         description: Internal server error
  */
-router.put('/update/:id',updateErrand);
+router.put('/errand/update/:id', authenticated, uploads.single('attachments'), updateErrand);
 
 /**
  * @swagger
@@ -279,7 +258,7 @@ router.put('/update/:id',updateErrand);
  *   delete:
  *     summary: Delete an errand by ID
  *     tags: [Errands]
- *     description: Permanently remove an errand from the system using its unique ID.
+ *     description: Permanently remove an errand from the system by its unique ID.
  *     parameters:
  *       - in: path
  *         name: id
@@ -288,7 +267,6 @@ router.put('/update/:id',updateErrand);
  *         schema:
  *           type: string
  *           format: uuid
- *           example: "b9e6f8a1-1c2b-4d39-a3d3-82d59b3f241a"
  *     responses:
  *       200:
  *         description: Errand deleted successfully
@@ -302,11 +280,9 @@ router.put('/update/:id',updateErrand);
  *                   example: "Errand deleted successfully"
  *       404:
  *         description: Errand not found
- *       400:
- *         description: Invalid ID format
  *       500:
  *         description: Internal server error
  */
-router.delete('/delete/:id',deleteErrand)
+router.delete('/errand/delete/:id', deleteErrand);
 
 module.exports = router;
