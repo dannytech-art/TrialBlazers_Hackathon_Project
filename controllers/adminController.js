@@ -1,16 +1,17 @@
 const adminModel = require('../models').Admin;
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const Admin = require('../models/admin');
 
 exports.createAdmin = async (req, res) => {
     try {
         const { email, password } = req.body;
-        const existingAdmin = await adminModel.findOne({where: {email: email.toLowerCase().trim()}});
+        const existingAdmin = await Admin.findOne({where: {email: email.toLowerCase().trim()}});
         if (existingAdmin) {
             return res.status(400).json({message: `email ${email} already exist as an admin`});
         }
         const hashedPassword = await bcrypt.hash(password, 10);
-        const newAdmin = await adminModel.create({
+        const newAdmin = await Admin.create({
             email,
             password: hashedPassword
         });
@@ -28,7 +29,7 @@ exports.createAdmin = async (req, res) => {
 exports.loginAdmin = async (req, res) => {
     try {
        const { email, password } = req.body;
-       const admin = await adminModel.findOne({where: {email: email.toLowerCase().trim()}});
+       const admin = await Admin.findOne({where: {email: email.toLowerCase().trim()}});
          if (!admin) {
               return res.status(400).json({message: `Invalid credentials`});
             }

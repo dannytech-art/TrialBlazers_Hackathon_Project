@@ -66,7 +66,6 @@ const { createErrand, getAllErrands, getErrandById, updateErrand,deleteErrand} =
  *       500:
  *         description: Server error
  */
-
 router.post('/create',createErrand)
 
 /**
@@ -129,9 +128,7 @@ router.post('/create',createErrand)
  *       500:
  *         description: Internal server error
  */
-
 router.get('/getall',getAllErrands);
-
 /**
  * @swagger
  * /api/v1/errand/get/{id}:
@@ -205,7 +202,6 @@ router.get('/getall',getAllErrands);
  *       500:
  *         description: Internal server error
  */
-
 router.get('/get/:id', getErrandById);
 
 /**
@@ -275,7 +271,6 @@ router.get('/get/:id', getErrandById);
  *       500:
  *         description: Internal server error
  */
-
 router.put('/update/:id',updateErrand);
 
 /**
@@ -312,7 +307,6 @@ router.put('/update/:id',updateErrand);
  *       500:
  *         description: Internal server error
  */
-
 router.delete('/delete/:id',deleteErrand)
 
 module.exports = router;

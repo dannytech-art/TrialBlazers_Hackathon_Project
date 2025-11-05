@@ -31,7 +31,7 @@ const WalletTransaction = require('./wallettransaction');
 const RunnerBankDetails = require('./runnerbankdetails');
 const RunnerApplication = require('./runnerapplication');
 
-// Initialize models
+// Register models
 db.Admin = Admin;
 db.User = User;
 db.Errand = Errand;
@@ -44,40 +44,57 @@ db.WalletTransaction = WalletTransaction;
 db.RunnerBankDetails = RunnerBankDetails;
 db.RunnerApplication = RunnerApplication;
 
-// Define associations
-db.User.hasMany(db.Errand, {foreignKey: 'userId'});
-db.User.hasMany(db.RunnerApplication, {foreignKey: 'runnerId'});
-db.User.hasMany(db.Review, {foreignKey: 'reviewerId'});
+//
 
-db.Errand.belongsTo(db.User, {foreignKey: 'userId', as: 'poster'});
-db.Errand.hasMany(db.RunnerApplication, {foreignKey: 'errandId'});
-db.Errand.hasOne(db.Payment, {foreignKey: 'errandId'});
-db.Errand.hasOne(db.Review, {foreignKey: 'errandId'});
+// ---------- USERS & ERRANDS ----------
+db.User.hasMany(db.Errand, { foreignKey: 'userId', as: 'postedErrands' });
+db.Errand.belongsTo(db.User, { foreignKey: 'userId', as: 'poster' });
 
-// Add more associations as needed
-db.User.hasOne(db.Wallet, {foreignKey: 'runnerId'});
-db.Wallet.belongsTo(db.User, {foreignKey: 'runnerId'});
-db.Wallet.hasMany(db.WalletTransaction, {foreignKey: 'walletId'});
-db.WalletTransaction.belongsTo(db.Wallet, {foreignKey: 'walletId'});
+// ---------- RUNNER APPLICATIONS ----------
+db.User.hasMany(db.RunnerApplication, { foreignKey: 'runnerId', as: 'applications' });
+db.RunnerApplication.belongsTo(db.User, { foreignKey: 'runnerId', as: 'runner' });
+db.Errand.hasMany(db.RunnerApplication, { foreignKey: 'errandId', as: 'applications' });
+db.RunnerApplication.belongsTo(db.Errand, { foreignKey: 'errandId', as: 'errand' });
 
-db.User.hasOne(db.KYC, {foreignKey: 'userId'});
-db.KYC.belongsTo(db.User, {foreignKey: 'userId'});
+// ---------- REVIEWS ----------
+db.User.hasMany(db.Review, { foreignKey: 'reviewerId', as: 'reviewsGiven' });
+db.Review.belongsTo(db.User, { foreignKey: 'reviewerId', as: 'reviewer' });
+db.Errand.hasOne(db.Review, { foreignKey: 'errandId', as: 'review' });
+db.Review.belongsTo(db.Errand, { foreignKey: 'errandId', as: 'errand' });
 
+// ---------- WALLET & TRANSACTIONS ----------
+db.User.hasOne(db.Wallet, { foreignKey: 'runnerId', as: 'wallet' });
+db.Wallet.belongsTo(db.User, { foreignKey: 'runnerId', as: 'runner' });
+
+db.Wallet.hasMany(db.WalletTransaction, { foreignKey: 'walletId', as: 'transactions' });
+db.WalletTransaction.belongsTo(db.Wallet, { foreignKey: 'walletId', as: 'wallet' });
+
+// ---------- KYC ----------
+db.User.hasOne(db.KYC, { foreignKey: 'userId', as: 'kyc' });
+db.KYC.belongsTo(db.User, { foreignKey: 'userId', as: 'user' });
+
+//  Link reviewer (admin) who reviewed KYC
+db.User.hasMany(db.KYC, { foreignKey: 'reviewedBy', as: 'reviewedKYCs' });
+db.KYC.belongsTo(db.User, { foreignKey: 'reviewedBy', as: 'reviewer' });
+
+// ---------- PAYMENTS ----------
+db.Payment.belongsTo(db.User, { foreignKey: 'payerId', as: 'payer' });
+db.Payment.belongsTo(db.User, { foreignKey: 'receiverId', as: 'receiver' });
+db.User.hasMany(db.Payment, { foreignKey: 'payerId', as: 'paymentsMade' });
+db.User.hasMany(db.Payment, { foreignKey: 'receiverId', as: 'paymentsReceived' });
+
+// ---------- RUNNER BANK DETAILS ----------
+db.User.hasOne(db.RunnerBankDetails, { foreignKey: 'runnerId', as: 'bankDetails' });
+db.RunnerBankDetails.belongsTo(db.User, { foreignKey: 'runnerId', as: 'runner' });
+
+// ---------- ERRAND - PAYMENT (optional, if tied to an errand) ----------
+db.Errand.hasOne(db.Payment, { foreignKey: 'errandId', as: 'payment' });
+db.Payment.belongsTo(db.Errand, { foreignKey: 'errandId', as: 'errand' });
+
+//
+// Export
+//
 db.sequelize = sequelize;
-db.Sequelize = Sequelize;
 
-
-
-
-
-
-// ✅ Connect associations automatically
-// Object.keys(db).forEach((modelName) => {
-//   if (db[modelName].associate) {
-//     db[modelName].associate(db);
-//   }
-// });
 
 module.exports = db;
-
-

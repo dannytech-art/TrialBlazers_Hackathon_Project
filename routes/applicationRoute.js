@@ -110,7 +110,7 @@ router.post('/apply/:errandId', authenticated, applyForErrand);
 
 /**
  * @swagger
- * /api/v1/applications/errand/{errandId}:
+ * /api/v1/errand/{errandId}:
  *   get:
  *     summary: Get all applications for a specific errand
  *     description: Fetch all runner applications submitted for a particular errand, including the runners’ basic details.
@@ -179,7 +179,7 @@ router.get('/errand/:errandId', authenticated, getErrandApplications);
 
 /**
  * @swagger
- * /api/v1/applications/{id}/status:
+ * /api/v1/{id}/status:
  *   put:
  *     summary: Update the status of a runner’s errand application
  *     description: Allows the errand creator (or admin) to accept or reject a runner’s application.
@@ -221,7 +221,7 @@ router.put('/:id/status', authenticated, updateApplicationStatus);
 
 /**
  * @swagger
- * /api/v1/applications/my-applications:
+ * /api/v1/my-applications:
  *   get:
  *     summary: Get all errands applied for by the authenticated runner
  *     description: Returns a list of all errand applications submitted by the currently logged-in runner.
