@@ -29,9 +29,13 @@ module.exports = {
         allowNull: false,
         type: Sequelize.DATE,
       }
-    }, {
+    }, 
+    {
       engine: 'InnoDB'
-    });
+    }
+  )
+
+    ;
 
     // Only index UUID columns for lookup
     await queryInterface.addIndex('Messages', ['senderId']);

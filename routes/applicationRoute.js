@@ -11,11 +11,11 @@ const { authenticated } = require('../middleware/authenticate');
  * @swagger
  * /api/v1/apply/{errandId}:
  *   post:
- *     summary: Runner applies for an errand
- *     description: Allows a verified runner to apply for a specific errand by providing a bid price and message.
+ *     summary: Apply for an errand
+ *     description: Allows a verified runner to apply for a specific errand. Runners can either accept the current price or propose a new bid price.
  *     tags: [Runner Applications]
  *     security:
- *       - bearerAuth: []
+ *       - bearerAuth: []   # JWT required
  *     parameters:
  *       - in: path
  *         name: errandId
@@ -24,29 +24,20 @@ const { authenticated } = require('../middleware/authenticate');
  *           type: string
  *           format: uuid
  *         description: The ID of the errand the runner wants to apply for.
- *         example: "2c1a2d0e-4410-4e23-8c60-d6b7e21e2f31"
  *     requestBody:
- *       required: true
+ *       required: false
  *       content:
  *         application/json:
  *           schema:
  *             type: object
- *             required:
- *               - bidPrice
- *               - message
  *             properties:
  *               bidPrice:
  *                 type: number
- *                 format: float
- *                 description: The amount the runner is bidding for the errand.
- *                 example: 1500
- *               message:
- *                 type: string
- *                 description: A short note or message to the client explaining the offer or motivation.
- *                 example: "I live nearby and can get this done within 2 hours."
+ *                 example: 4500
+ *                 description: Proposed price by the runner (optional). If not provided, the runner accepts the errand’s listed price.
  *     responses:
- *       201:
- *         description: Application successfully created.
+ *       200:
+ *         description: Successfully applied for the errand
  *         content:
  *           application/json:
  *             schema:
@@ -54,37 +45,34 @@ const { authenticated } = require('../middleware/authenticate');
  *               properties:
  *                 message:
  *                   type: string
- *                   example: Application submitted successfully
+ *                   example: Current price accepted for errand
  *                 data:
  *                   type: object
  *                   properties:
  *                     id:
  *                       type: string
  *                       format: uuid
- *                       example: "32c9f480-16e1-41c4-a24b-42b7312f7469"
+ *                       example: "8d0a3b12-cc0f-4e6a-992f-bb77f4e4732f"
  *                     runnerId:
  *                       type: string
  *                       format: uuid
- *                       example: "b47e8610-3e64-4b28-9cf3-cd7e3b2a8472"
+ *                       example: "62d9c7f3-7a18-4e61-a8d5-8fef1f5e9340"
  *                     errandId:
  *                       type: string
  *                       format: uuid
- *                       example: "2c1a2d0e-4410-4e23-8c60-d6b7e21e2f31"
+ *                       example: "7b1f68b2-3c4e-45c6-beb8-9a1b24b71841"
+ *                     currentPrice:
+ *                       type: number
+ *                       example: 5000
  *                     bidPrice:
  *                       type: number
- *                       example: 1500
- *                     message:
- *                       type: string
- *                       example: "I live nearby and can get this done within 2 hours."
+ *                       nullable: true
+ *                       example: null
  *                     status:
  *                       type: string
  *                       example: Pending
- *                     createdAt:
- *                       type: string
- *                       format: date-time
- *                       example: "2025-10-24T11:20:00.000Z"
  *       400:
- *         description: Bad Request — missing fields or duplicate application.
+ *         description: Bad request (invalid data or user not eligible)
  *         content:
  *           application/json:
  *             schema:
@@ -92,9 +80,19 @@ const { authenticated } = require('../middleware/authenticate');
  *               properties:
  *                 message:
  *                   type: string
- *                   example: You have already applied for this errand
+ *                   example: Complete your KYC verification to apply for errands!
+ *       401:
+ *         description: Unauthorized (no token or invalid token)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Unauthorized
  *       404:
- *         description: Errand not found.
+ *         description: Errand not found
  *         content:
  *           application/json:
  *             schema:
@@ -103,8 +101,6 @@ const { authenticated } = require('../middleware/authenticate');
  *                 message:
  *                   type: string
  *                   example: Errand not found
- *       500:
- *         description: Internal server error.
  */
 router.post('/apply/:errandId', authenticated, applyForErrand);
 

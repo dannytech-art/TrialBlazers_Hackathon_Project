@@ -3,7 +3,8 @@ const {RunnerApplication, Errand, User, KYC } = db
 
 exports.applyForErrand = async (req, res) => {
   try {
-    const { bidPrice, message } = req.body;
+    const { bidPrice } = req.body;
+
     const { errandId } = req.params; 
     const runnerId = req.user.id; 
     // Check if the User is a Client or Runner before applying for errands
@@ -13,7 +14,6 @@ exports.applyForErrand = async (req, res) => {
     }
 
     const runnerKYC = await KYC.findOne({where: {userId: runnerId}});
-    
     if (!runnerKYC || runnerKYC.status !== 'verified'){
       return res.status(400).json({ message: 'Complete your KYC verification to apply for errands!'})
     }
@@ -32,19 +32,23 @@ exports.applyForErrand = async (req, res) => {
       return res.status(400).json({ message: 'You have already applied for this errand' });
     }
 
-    // Create new application
-    const application = await RunnerApplication.create({
+    if (!bidPrice){
+      const acceptedPrice = await RunnerApplication.create({
       runnerId,
       errandId,
-      message,
+      currentPrice: errand.price ?? 0,
+      status: 'Pending',
+      })
+      return res.status(200).json({message: 'Current price accepted for errand', data: acceptedPrice})
+    } else {
+     const proposedPrice = await RunnerApplication.create({
+      runnerId,
+      errandId,
       bidPrice,
       status: 'Pending',
     });
-
-    res.status(201).json({
-      message: 'Application submitted successfully',
-      data: application,
-    });
+    return res.status(200).json({message: 'Proposed price for errand', data: proposedPrice})
+    }
   } catch (error) {
     console.error('Error in applyForErrand:', error);
     res.status(500).json({ message: 'Internal Server Error', error: error.message });
@@ -54,7 +58,7 @@ exports.applyForErrand = async (req, res) => {
 exports.getErrandApplications = async (req, res) => {
   try {
     const { errandId } = req.params;
-
+    const errand = await Errand.findByPk(errandId);
     const applications = await RunnerApplication.findAll({
       where: { errandId },
       include: [
@@ -69,6 +73,7 @@ exports.getErrandApplications = async (req, res) => {
     res.status(200).json({
       message: `Found ${applications.length} applications for this errand`,
       data: applications,
+      pickupContact: errand.pickupContact
     });
   } catch (error) {
     console.error('Error in getErrandApplications:', error);
