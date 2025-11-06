@@ -4,6 +4,7 @@ const {
   getErrandApplications,
   updateApplicationStatus,
   getRunnerApplications,
+  getErrandApplicationsForArunner,
 } = require('../controllers/applicationController');
 const { authenticated } = require('../middleware/authenticate');
 
@@ -278,5 +279,94 @@ router.put('/:id/status', authenticated, updateApplicationStatus);
  *         description: Unauthorized - missing or invalid token.
  */
 router.get('/my-applications', authenticated, getRunnerApplications);
+
+/**
+ * @swagger
+ * /api/v1/applicant/{errandId}/{runnerId}:
+ *   get:
+ *     summary: Get a specific runner's application for an errand
+ *     tags: [Errand Applications]
+ *     description: Retrieve all applications submitted by a specific runner (`runnerId`) for a specific errand (`errandId`).
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: errandId
+ *         required: true
+ *         description: The unique ID of the errand.
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *       - in: path
+ *         name: runnerId
+ *         required: true
+ *         description: The unique ID of the runner.
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved applications for the runner and errand.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Found 1 applications for this errand"
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                         example: "8d5a36b2-fd8b-42e4-8e6c-8c39a9a38b4f"
+ *                       errandId:
+ *                         type: string
+ *                         example: "e4dcb06d-0134-4d38-a9d0-6a5460bfa0f2"
+ *                       runnerId:
+ *                         type: string
+ *                         example: "7e35e3f5-729c-4c70-a5b9-94c3a8b2c3de"
+ *                       runner:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: string
+ *                             example: "7e35e3f5-729c-4c70-a5b9-94c3a8b2c3de"
+ *                           firstName:
+ *                             type: string
+ *                             example: "John"
+ *                           lastName:
+ *                             type: string
+ *                             example: "Doe"
+ *                           email:
+ *                             type: string
+ *                             example: "john.doe@example.com"
+ *                           bio:
+ *                             type: string
+ *                             example: "Experienced runner available for delivery errands."
+ *                           rating:
+ *                             type: number
+ *                             example: 4.5
+ *                           totalJobs:
+ *                             type: integer
+ *                             example: 22
+ *                 pickupContact:
+ *                   type: string
+ *                   example: "+2348081234567"
+ *       400:
+ *         description: Invalid parameters or missing errandId/runnerId.
+ *       401:
+ *         description: Unauthorized - invalid or missing authentication token.
+ *       404:
+ *         description: No applications found for the given errand and runner.
+ *       500:
+ *         description: Internal Server Error.
+ */
+
+
+router.get('/applicant/:errandId/:runnerId', authenticated, getErrandApplicationsForArunner)
 
 module.exports = router;

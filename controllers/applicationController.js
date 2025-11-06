@@ -62,11 +62,7 @@ exports.getErrandApplications = async (req, res) => {
     const applications = await RunnerApplication.findAll({
       where: { errandId },
       include: [
-        // {
-        //   model: RunnerApplication,
-        //   as: 'runnerapplication',
-        //   attributes: [ 'bidPrice']
-        // },
+
         {
           model: User,
           as: 'runner',
@@ -138,6 +134,33 @@ exports.getRunnerApplications = async (req, res) => {
     });
   } catch (error) {
     console.error('Error in getRunnerApplications:', error);
+    res.status(500).json({ message: 'Internal Server Error', error: error.message });
+  }
+};
+exports.getErrandApplicationsForArunner = async (req, res) => {
+  try {
+    const { errandId } = req.params;
+    const {runnerId} = req.params;
+    const errand = await Errand.findByPk(errandId);
+    const applications = await RunnerApplication.findAll({
+      where: { errandId, runnerId },
+      include: [
+        
+        {
+          model: User,
+          as: 'runner',
+          attributes: ['id', 'firstName', 'lastName', 'email', 'bio', 'rating', 'totalJobs', ],
+        },
+      ],
+    });
+
+    res.status(200).json({
+      message: `Found ${applications.length} applications for this errand`,
+      data: applications,
+      pickupContact: errand.pickupContact
+    });
+  } catch (error) {
+    console.error('Error in getErrandApplications:', error);
     res.status(500).json({ message: 'Internal Server Error', error: error.message });
   }
 };
