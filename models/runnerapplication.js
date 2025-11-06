@@ -33,18 +33,18 @@ RunnerApplication.init(
       onUpdate: 'CASCADE',
       onDelete: 'CASCADE',
     },
-    message: {
-      type: DataTypes.TEXT,
-      allowNull: true,
-    },
+    currentPrice: {
+        type: DataTypes.FLOAT,
+        allowNull: true,
+      },
+      bidPrice: {
+        type: DataTypes.FLOAT,
+        allowNull: true,
+      },
     status: {
       type: DataTypes.ENUM('Pending', 'Accepted', 'Rejected'),
       allowNull: false,
       defaultValue: 'Pending',
-    },
-    bidPrice: {
-      type: DataTypes.FLOAT,
-      allowNull: false,
     },
   },
   {
