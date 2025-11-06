@@ -1,3 +1,4 @@
+const { application } = require('express');
 const db = require('../models');
 const {RunnerApplication, Errand, User, KYC } = db
 
@@ -61,10 +62,15 @@ exports.getErrandApplications = async (req, res) => {
     const applications = await RunnerApplication.findAll({
       where: { errandId },
       include: [
+        // {
+        //   model: RunnerApplication,
+        //   as: 'runnerapplication',
+        //   attributes: [ 'bidPrice']
+        // },
         {
           model: User,
           as: 'runner',
-          attributes: ['id', 'firstName', 'lastName', 'email'],
+          attributes: ['id', 'firstName', 'lastName', 'email', 'bio', 'rating', 'totalJobs', ],
         },
       ],
     });
