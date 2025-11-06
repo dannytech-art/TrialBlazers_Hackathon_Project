@@ -2,7 +2,6 @@ const Payment = require('../models/payment');
 const Wallet = require('../models/wallet');
 const axios = require('axios');
 const cron = require('node-cron');
-require('dotenv').config();
 
 
 exports.processMondayPayments = async (req, res) => {

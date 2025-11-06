@@ -91,18 +91,12 @@ const {
  *       500:
  *         description: Internal Server Error
  */
-router.post(
-
- 
-
-  '/submit', authenticated, upload.fields([
-
+router.post('/submit', authenticated, upload.fields([
     { name: 'governmentIdCard', maxCount: 1 },
     { name: 'proofOfAddressImage', maxCount: 1 },
     { name: 'selfieWithIdCard', maxCount: 1 },
   ]),
   submitKYC
-
 );
 
 /**

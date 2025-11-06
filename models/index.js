@@ -47,7 +47,7 @@ db.RunnerApplication = RunnerApplication;
 //
 
 // ---------- USERS & ERRANDS ----------
-db.User.hasMany(db.Errand, { foreignKey: 'userId', as: 'postedErrands' });
+db.User.hasMany(db.Errand, { foreignKey: 'userId', as: 'postedErrands', onDelete: 'CASCADE', });
 db.Errand.belongsTo(db.User, { foreignKey: 'userId', as: 'poster' });
 
 // ---------- RUNNER APPLICATIONS ----------

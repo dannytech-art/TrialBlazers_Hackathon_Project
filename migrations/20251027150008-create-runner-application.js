@@ -25,6 +25,14 @@ module.exports = {
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
       },
+      bidPrice: {
+        type: Sequelize.FLOAT,
+        allowNull: true,
+      },
+      currentPrice: {
+        type: Sequelize.FLOAT,
+        allowNull: true,
+      },
       status: {
         type: Sequelize.ENUM('Pending', 'Completed', 'Cancelled'),
         allowNull: false,
