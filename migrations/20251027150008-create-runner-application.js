@@ -29,6 +29,19 @@ module.exports = {
         type: Sequelize.FLOAT,
         allowNull: true,
       },
+      currentPrice: {
+        type: Sequelize.FLOAT,
+        allowNull: true,
+      },
+      status: {
+        type: Sequelize.ENUM('Pending', 'Completed', 'Cancelled'),
+        allowNull: false,
+        defaultValue: 'Pending',
+      },
+      bidPrice: {
+        type: Sequelize.FLOAT,
+        allowNull: false,
+      },
       
       createdAt: {
   allowNull: false,
