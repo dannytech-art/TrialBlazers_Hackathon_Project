@@ -72,8 +72,7 @@ KYC.init(
 },
   {
     sequelize,
-    modelName: 'KYC',
-    tableName: 'KYCs',
+    modelName: 'KYCs',
     timestamps: true,
   }
 );

@@ -29,8 +29,7 @@ Admin.init(
   },
   {
     sequelize,            // Sequelize instance
-    modelName: 'Admin',   // Model name
-    tableName: 'Admins',  // Optional: customize table name
+    modelName: 'Admins',   // Model name
     timestamps: true,     // Automatically add createdAt/updatedAt
   }
 );

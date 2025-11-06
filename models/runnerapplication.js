@@ -38,10 +38,6 @@ RunnerApplication.init(
       allowNull: false,
       defaultValue: 'Pending',
     },
-    bidPrice: {
-      type: DataTypes.FLOAT,
-      allowNull: false,
-    },
   },
   {
     sequelize,

@@ -78,18 +78,9 @@ Errand.init(
   },
   {
     sequelize,
-    modelName: 'Errand',
-    tableName: 'Errands',
+    modelName: 'Errands',
     timestamps: true,
   }
 );
-// Define associations
-User.hasMany(Errand, {
-  foreignKey: 'userId',
-  onDelete: 'CASCADE',
-});
-Errand.belongsTo(User, {
-  foreignKey: 'userId',
-});
 
 module.exports = Errand;
