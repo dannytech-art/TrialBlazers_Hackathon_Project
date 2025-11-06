@@ -113,7 +113,26 @@ exports.getErrandById = async (req, res) => {
     });
   }
 };
-
+exports.getErrandByClientId = async (req, res) => {
+  try {
+    const userFromToken = req.user;
+    const errands = await Errand.findAll({
+      where: { userId: userFromToken.id },
+      include: [{ model: User, attributes: ['id', 'firstName', 'lastName', 'email'] }],
+      order: [['createdAt', 'DESC']],
+    });
+    res.status(200).json({
+      message: 'Errands retrieved successfully',
+      data: errands,
+    });
+  } catch (error) {
+    console.error('Fetching Errand Error:', error);
+    res.status(500).json({
+      message: 'Internal server error while fetching errand',
+      error: error.message,
+    });
+  }
+};
 exports.updateErrand = async (req, res) => {
   try {
     const user = req.user;

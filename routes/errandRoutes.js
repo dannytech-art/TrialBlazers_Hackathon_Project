@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { createErrand, getAllErrands, getErrandById, updateErrand, deleteErrand } = require('../controllers/errandController');
+const { createErrand, getAllErrands, getErrandById, updateErrand, deleteErrand, getErrandByClientId } = require('../controllers/errandController');
 const { postErrandValidator } = require('../middleware/validator');
 const { authenticated } = require('../middleware/authenticate');
 const uploads = require('../middleware/multer'); // multer config for file uploads
@@ -285,4 +285,91 @@ router.put('/errand/update/:id', authenticated, uploads.single('attachments'), u
  */
 router.delete('/errand/delete/:id', deleteErrand);
 
+/**
+ * @swagger
+ * /api/v1/errand/my-errands:
+ *   get:
+ *     summary: Get all errands created by the authenticated client
+ *     description: Retrieves all errands associated with the currently authenticated user's ID (extracted from the JWT token).
+ *     tags: [Errands]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved user's errands
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Errands retrieved successfully
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                         example: 1
+ *                       title:
+ *                         type: string
+ *                         example: Deliver package
+ *                       description:
+ *                         type: string
+ *                         example: Deliver package to client in Lagos
+ *                       status:
+ *                         type: string
+ *                         example: pending
+ *                       createdAt:
+ *                         type: string
+ *                         format: date-time
+ *                       updatedAt:
+ *                         type: string
+ *                         format: date-time
+ *                       user:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: integer
+ *                             example: 5
+ *                           firstName:
+ *                             type: string
+ *                             example: Daniel
+ *                           lastName:
+ *                             type: string
+ *                             example: Johnson
+ *                           email:
+ *                             type: string
+ *                             example: daniel@example.com
+ *       401:
+ *         description: Unauthorized - Token missing or invalid
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Unauthorized - Invalid or missing token
+ *       500:
+ *         description: Internal server error while fetching errands
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Internal server error while fetching errand
+ *                 error:
+ *                   type: string
+ *                   example: Database connection failed
+ */
+
+
+router.get('/errand/my-errands', authenticated, getErrandByClientId);
+
 module.exports = router;
+
