@@ -33,10 +33,6 @@ RunnerApplication.init(
       onUpdate: 'CASCADE',
       onDelete: 'CASCADE',
     },
-    message: {
-      type: DataTypes.TEXT,
-      allowNull: true,
-    },
     status: {
       type: DataTypes.ENUM('Pending', 'Accepted', 'Rejected'),
       allowNull: false,

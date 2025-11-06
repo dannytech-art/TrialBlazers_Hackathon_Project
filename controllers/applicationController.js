@@ -3,7 +3,7 @@ const {RunnerApplication, Errand, User, KYC } = db
 
 exports.applyForErrand = async (req, res) => {
   try {
-    const { bidPrice, message } = req.body;
+    const { bidPrice } = req.body;
     const { errandId } = req.params; 
     const runnerId = req.user.id; 
     // Check if the User is a Client or Runner before applying for errands
@@ -36,7 +36,6 @@ exports.applyForErrand = async (req, res) => {
     const application = await RunnerApplication.create({
       runnerId,
       errandId,
-      message,
       bidPrice,
       status: 'Pending',
     });
@@ -114,6 +113,11 @@ exports.getRunnerApplications = async (req, res) => {
           as: 'errand',
           attributes: ['id', 'title', 'description', 'price', 'status'],
         },
+        {
+          model: User,
+          as: 'runner',
+          attributes: ['id', 'firstName', 'lastname', 'totalJobs', 'bio' ]
+        }
       ],
     });
 

@@ -34,10 +34,7 @@ module.exports = {
         type: Sequelize.FLOAT,
         allowNull: false,
       },
-      message: {
-        type: Sequelize.TEXT,
-        allowNull: true,
-      },
+      
       createdAt: {
   allowNull: false,
   type: Sequelize.DATE,
