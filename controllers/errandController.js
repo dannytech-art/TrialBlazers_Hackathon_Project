@@ -75,7 +75,7 @@ exports.createErrand = async (req, res) => {
 exports.getAllErrands = async (req, res) => {
   try {
     const errands = await Errand.findAll({
-      include: [{ model: User, attributes: ['id', 'firstName', 'lastName', 'email'] }],
+      include: [{ model: User, as: 'poster', attributes: ['id', 'firstName', 'lastName', 'email'] }],
       order: [['createdAt', 'DESC']],
     });
 
@@ -95,7 +95,7 @@ exports.getErrandById = async (req, res) => {
   try {
     const { id } = req.params;
     const foundErrand = await Errand.findByPk(id, {
-      include: [{ model: User, attributes: ['id', 'firstName', 'lastName', 'email'] }],
+      include: [{ model: User, as: 'poster', attributes: ['id', 'firstName', 'lastName', 'email'] }],
     });
 
     if (!foundErrand) {
@@ -118,7 +118,7 @@ exports.getErrandByClientId = async (req, res) => {
     const userFromToken = req.user;
     const errands = await Errand.findAll({
       where: { userId: userFromToken.id },
-      include: [{ model: User, attributes: ['id', 'firstName', 'lastName', 'email'] }],
+      include: [{ model: User, as: 'poster', attributes: ['id', 'firstName', 'lastName', 'email'] }],
       order: [['createdAt', 'DESC']],
     });
     res.status(200).json({
