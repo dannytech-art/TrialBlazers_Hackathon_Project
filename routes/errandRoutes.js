@@ -367,8 +367,6 @@ router.delete('/errand/delete/:id', deleteErrand);
  *                   type: string
  *                   example: Database connection failed
  */
-
-
 router.get('/errand/my-errands', authenticated, getErrandByClientId);
 
 module.exports = router;

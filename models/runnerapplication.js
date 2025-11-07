@@ -40,8 +40,12 @@ RunnerApplication.init(
     },
     bidPrice: {
         type: DataTypes.FLOAT,
-        allowNull: false,
+        allowNull: true,
       },
+    currentPrice: {
+      type: DataTypes.FLOAT,
+        allowNull: true,
+    }
   },
   {
     sequelize,

@@ -25,6 +25,11 @@ module.exports = {
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
       },
+      status: {
+        type: Sequelize.ENUM('Pending', 'Accepted', 'Rejected'),
+        allowNull: false,
+        defaultValue: 'Pending',
+      },
       bidPrice: {
         type: Sequelize.FLOAT,
         allowNull: true,
@@ -33,24 +38,14 @@ module.exports = {
         type: Sequelize.FLOAT,
         allowNull: true,
       },
-      status: {
-        type: Sequelize.ENUM('Pending', 'Completed', 'Cancelled'),
-        allowNull: false,
-        defaultValue: 'Pending',
-      },
-      bidPrice: {
-        type: Sequelize.FLOAT,
-        allowNull: false,
-      },
-      
       createdAt: {
-  allowNull: false,
-  type: Sequelize.DATE,
-},
-updatedAt: {
-  allowNull: false,
-  type: Sequelize.DATE,
-}
+        allowNull: false,
+        type: Sequelize.DATE,
+      },
+      updatedAt: {
+        allowNull: false,
+        type: Sequelize.DATE,
+      }
     });
   },
   async down(queryInterface, Sequelize) {
