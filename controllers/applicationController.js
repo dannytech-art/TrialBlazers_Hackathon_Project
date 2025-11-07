@@ -1,6 +1,7 @@
 const { application } = require('express');
 const db = require('../models');
 const {RunnerApplication, Errand, User, KYC } = db
+const { Op } = require('sequelize');
 
 exports.applyForErrand = async (req, res) => {
   try {
@@ -162,5 +163,46 @@ exports.getErrandApplicationsForArunner = async (req, res) => {
   } catch (error) {
     console.error('Error in getErrandApplications:', error);
     res.status(500).json({ message: 'Internal Server Error', error: error.message });
+  }
+};
+
+exports.acceptRunnerApplication = async (req, res) => {
+  try {
+    const { errandId, applicationId } = req.params;
+    const clientId = req.user.id; 
+
+    // Fetch the errand and verify the client owns it
+    const errand = await Errand.findByPk(errandId);
+    if (!errand) return res.status(404).json({ message: 'Errand not found' });
+    if (errand.userId !== clientId)
+      return res.status(403).json({ message: 'You are not authorized to accept applications for this errand' });
+
+    // Get the selected runner application
+    const application = await RunnerApplication.findByPk(applicationId);
+    if (!application || application.errandId !== errandId)
+      return res.status(404).json({ message: 'Application not found for this errand' });
+
+    // Update selected application
+    await application.update({ status: 'Accepted' });
+
+    // Reject all other applications for this errand
+    await RunnerApplication.update(
+      { status: 'Rejected' },
+      { where: { errandId, id: { [Op.ne]: applicationId } } }
+    );
+
+    // Assign the errand to this runner
+    await errand.update({ assignedTo: application.runnerId, status: 'In Progress' });
+
+    return res.status(200).json({
+      message: 'Runner application accepted successfully',
+      data: {
+        acceptedApplication: application,
+        errand,
+      },
+    });
+  } catch (error) {
+    console.error('Error in acceptRunnerApplication:', error);
+    return res.status(500).json({ message: 'Internal Server Error', error: error.message });
   }
 };

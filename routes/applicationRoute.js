@@ -5,6 +5,7 @@ const {
   updateApplicationStatus,
   getRunnerApplications,
   getErrandApplicationsForArunner,
+  acceptRunnerApplication,
 } = require('../controllers/applicationController');
 const { authenticated } = require('../middleware/authenticate');
 
@@ -365,8 +366,56 @@ router.get('/my-applications', authenticated, getRunnerApplications);
  *       500:
  *         description: Internal Server Error.
  */
-
-
 router.get('/applicant/:errandId/:runnerId', authenticated, getErrandApplicationsForArunner)
+
+/**
+ * @swagger
+ * /api/v1/errands/{errandId}/applications/{applicationId}/accept:
+ *   patch:
+ *     summary: Accept a runner application for an errand
+ *     description: Allows a client to accept a runner who applied for their errand. Other applications for the same errand are automatically rejected.
+ *     tags: [Errands]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: errandId
+ *         in: path
+ *         required: true
+ *         description: The ID of the errand.
+ *         schema:
+ *           type: string
+ *       - name: applicationId
+ *         in: path
+ *         required: true
+ *         description: The ID of the runner’s application to accept.
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Runner application accepted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Runner application accepted successfully
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     acceptedApplication:
+ *                       $ref: '#/components/schemas/RunnerApplication'
+ *                     errand:
+ *                       $ref: '#/components/schemas/Errand'
+ *       400:
+ *         description: Invalid request or unauthorized action
+ *       404:
+ *         description: Errand or application not found
+ *       500:
+ *         description: Internal Server Error
+ */
+router.patch(
+  '/errands/:errandId/applications/:applicationId/accept', authenticated, acceptRunnerApplication);
 
 module.exports = router;

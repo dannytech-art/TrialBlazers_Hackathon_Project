@@ -43,7 +43,7 @@ RunnerApplication.init(
         allowNull: true,
       },
     currentPrice: {
-        type: DataTypes.FLOAT,
+      type: DataTypes.FLOAT,
         allowNull: true,
     }
   },
