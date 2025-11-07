@@ -80,13 +80,11 @@ exports.resendValidator = (req, res, next) => {
 };
 exports.postErrandValidator = (req, res, next) => {
   const schema = Joi.object({
-    title: Joi.string().trim().min(5).required().messages({
+    title: Joi.string().trim().required().messages({
       'string.empty': 'Title is required',
-      'string.min': 'Title must be more than 5 characters long',
     }),
-    description: Joi.string().trim().min(10).required().messages({
+    description: Joi.string().trim().required().messages({
       'string.empty': 'Description is required',
-      'string.min': 'Description must be more than 10 characters long',
     }),
     pickupAddress: Joi.string().trim().required().messages({
       'string.empty': 'Pickup address is required',
