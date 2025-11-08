@@ -1,11 +1,12 @@
 const Message = require('../models/message');
-const { Sequelize } = require('sequelize'); // import Sequelize for Op.or
+const { Sequelize } = require('sequelize');
+const User = require('../models/users'); // ✅ import User model
 
 // Chat between logged-in user and another user
 exports.getMessages = async (req, res) => {
   try {
-    const currentUserId = String(req.user.id); // ensure string
-    const otherUserId = String(req.params.userId); 
+    const currentUserId = String(req.user.id);
+    const otherUserId = String(req.params.userId);
 
     const messages = await Message.findAll({
       where: {
@@ -14,19 +15,32 @@ exports.getMessages = async (req, res) => {
           { senderId: otherUserId, receiverId: currentUserId },
         ],
       },
-      order: [['createdAt', 'ASC']]
+      include: [
+        {
+          model: User,
+          as: 'sender',
+          attributes: ['id', 'firstName', 'lastName', 'email', 'profileImage', 'rating', 'role'],
+        },
+        {
+          model: User,
+          as: 'receiver',
+          attributes: ['id', 'firstName', 'lastName', 'email', 'profileImage', 'rating', 'role'],
+        },
+      ],
+      order: [['createdAt', 'ASC']],
     });
 
-    res.status(200).json(messages);
+    res.status(200).json({
+      message: `Found ${messages.length} messages between users`,
+      data: messages,
+    });
   } catch (err) {
-    console.error(err); // detailed error logging
-    res.status(500).json({ message: "Failed to get messages" });
+    console.error('Error fetching messages:', err.message);
+    res.status(500).json({ message: 'Failed to get messages', error: err.message });
   }
 };
 
 
-
-// Optional: Send a message (for REST API use)
 exports.sendMessage = async (req, res) => {
   const { receiverId, text } = req.body;
   const senderId = req.user.id;
@@ -37,9 +51,28 @@ exports.sendMessage = async (req, res) => {
 
   try {
     const message = await Message.create({ senderId, receiverId, text });
-    res.status(201).json(message);
+
+    const fullMessage = await Message.findByPk(message.id, {
+      include: [
+        {
+          model: User,
+          as: 'sender',
+          attributes: ['id', 'firstName', 'lastName', 'email', 'profileImage', 'rating', 'role'],
+        },
+        {
+          model: User,
+          as: 'receiver',
+          attributes: ['id', 'firstName', 'lastName', 'email', 'profileImage', 'rating', 'role'],
+        },
+      ],
+    });
+
+    res.status(201).json({
+      message: 'Message sent successfully',
+      data: fullMessage,
+    });
   } catch (err) {
-    console.error(" Error sending message:", err.message);
-    res.status(500).json({ error: "Failed to send message" });
+    console.error('Error sending message:', err.message);
+    res.status(500).json({ error: 'Failed to send message', details: err.message });
   }
 };
