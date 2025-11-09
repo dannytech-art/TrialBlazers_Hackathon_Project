@@ -723,20 +723,14 @@ router.get('/users', getAll);
 
 /**
  * @swagger
- * /api/v1/update/{id}:
+ * /api/v1/update:
  *   put:
- *     summary: Update a user's profile information
- *     description: Allows a user to update their first name, last name, or profile picture. Requires authentication.
- *     tags: [Users]
+ *     summary: Update User Profile
+ *     description: Allows an authenticated user to update their profile information such as first name, last name, bio, and profile image.
+ *     tags:
+ *       - Users
  *     security:
  *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         description: ID of the user to update
- *         schema:
- *           type: string
  *     requestBody:
  *       required: true
  *       content:
@@ -746,17 +740,17 @@ router.get('/users', getAll);
  *             properties:
  *               firstName:
  *                 type: string
- *                 example: Bukunmi
+ *                 example: Tony
  *               lastName:
  *                 type: string
  *                 example: Fasube
+ *               bio:
+ *                 type: string
+ *                 example: Science tutor and software developer passionate about chemistry and biology.
  *               profileImage:
  *                 type: string
  *                 format: binary
- *                 description: Upload a new profile image (optional)
- *               bio:
- *                 type: text
- *                 example: I like to play football
+ *                 description: Profile image file to upload
  *     responses:
  *       200:
  *         description: User updated successfully
@@ -771,39 +765,56 @@ router.get('/users', getAll);
  *                 data:
  *                   type: object
  *                   properties:
- *                     id:
- *                       type: string
- *                       example: 9e0e3e3c-5a41-4f5a-8f32-bb47d6b8f01d
  *                     firstName:
  *                       type: string
- *                       example: Bukunmi
+ *                       example: Tony
  *                     lastName:
  *                       type: string
  *                       example: Fasube
+ *                     bio:
+ *                       type: string
+ *                       example: Science tutor and software developer passionate about chemistry and biology.
  *                     profileImage:
  *                       type: object
  *                       properties:
  *                         publicId:
  *                           type: string
- *                           example: profile_pics/abc123
- *                         Url:
+ *                           example: user_profiles/1234abcd
+ *                         url:
  *                           type: string
- *                           example: https://res.cloudinary.com/demo/image/upload/v123456/profile_pics/abc123.jpg
-
- *                     bio:
- *                       type: text
- *                       example: I like to play football
-
+ *                           example: https://res.cloudinary.com/demo/image/upload/v172990/profile.png
  *       400:
- *         description: Invalid input or missing required fields
+ *         description: Invalid input data or bad request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Invalid request data
+ *       401:
+ *         description: Unauthorized - Missing or invalid token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Unauthorized - Please log in again
  *       404:
  *         description: User not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: User not found
  */
-
-router.put('/update/:id', uploads.single('profileImage'), authenticated, update);
-
-
-
+router.put('/update', authenticated, uploads.single('profileImage'), update);
 
 /**
  * @swagger
@@ -844,33 +855,6 @@ router.put('/update/:id', uploads.single('profileImage'), authenticated, update)
  *                   example: User not found
  */
 router.delete('/delete-user/:id', deleteUser);
-
-/**
- * @swagger
- * /api/v1/make-admin/{id}:
- *   put:
- *     summary: Promote a user to admin
- *     description: Updates a user's `isAdmin` status to true.
- *     tags: [Users]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         description: ID of the user to promote
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: User promoted to admin successfully
- *       404:
- *         description: User not found
- *       500:
- *         description: Internal server error
- */
-// router.put('/make-admin', makeAdmin);
-
 
 
 

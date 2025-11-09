@@ -1,6 +1,7 @@
 const cloudinary = require('../config/cloudinary');
 const fs = require('fs');
 const db = require('../models');
+const RunnerApplication = require('../models/runnerapplication');
 const {Errand, User, KYC} = db
 
 exports.createErrand = async (req, res) => {
@@ -223,3 +224,39 @@ exports.deleteErrand = async (req, res) => {
     });
   }
 };
+
+exports.generateStartOtp = async (req, res) => {
+  try {
+    const {errandId} = req.params
+    const runnerId = req.user.id
+    const errand = await Errand.findOne({where: {id: errandId}});
+    const application = await RunnerApplication.findOne({where: {errandId: errandId, runnerId: runnerId}});
+    
+    if (errand.status === 'Assigned' && application.status === 'Accepted'){
+        const startOTP = Math.floor(1000 + Math.random() * 9000).toString();
+        const startOTPExpiredAt = Date.now() + 1000 * 300;
+
+        await errand.update({startOTP: startOTP, startOTPExpires: startOTPExpiredAt});
+        return res.status(200).json({
+          message: 'OTP generated for Runner to begin trip',
+          errand: errand
+        })
+    }
+  } catch (error) {
+  res.status(500).json({
+      message: 'Internal server error while generating start OTP',
+      error: error.message,
+    });
+  }  
+}
+
+exports.generateDeliveryOtp = async (req, res) => {
+  try {
+    
+  } catch (error) {
+  res.status(500).json({
+      message: 'Internal server error while generating delivery OTP',
+      error: error.message,
+    });
+  }  
+}
