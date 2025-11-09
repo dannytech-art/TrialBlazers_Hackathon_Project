@@ -18,6 +18,7 @@ const messageRouter = require('./routes/messageRouter');
 const applicationRouter = require('./routes/applicationRoute');
 const adminRouter = require('./routes/adminRoute');
 const processMondayPayments = require('./routes/schedulepayment');
+const refundPayment = require('./routes/refundpayment');
 
 const app = express();
 const server = http.createServer(app);
@@ -56,6 +57,8 @@ app.use('/api/v1', messageRouter);
 app.use('/api/v1', applicationRouter);
 app.use('/api/v1', adminRouter);
 app.use('/api/v1', processMondayPayments);
+app.use('/api/v1',refundPayment);
+
 
 
 
