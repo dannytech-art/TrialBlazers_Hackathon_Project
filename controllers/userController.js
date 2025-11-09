@@ -28,7 +28,7 @@ exports.register = async (req, res) => {
 
         const saltRound = await bcrypt.genSalt(10);
         const hashPassword = await bcrypt.hash(password, saltRound);
-        const otp = Math.floor(100000 + Math.random() * 900000).toString();;
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
         
         let firstNameCase = toTitleCase(firstName);
         let lastNameCase = toTitleCase(lastName);
@@ -381,9 +381,8 @@ exports.getAll = async (req, res) => {
 exports.update = async (req, res) => {
   try {
     const { firstName, lastName, bio } = req.body;
-    const { id } = req.params;
+    const id = req.user.id;
     const file = req.file;
-
     const user = await userModel.findByPk(id);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });

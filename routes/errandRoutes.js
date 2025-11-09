@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { createErrand, getAllErrands, getErrandById, updateErrand, deleteErrand, getErrandByClientId } = require('../controllers/errandController');
+const { createErrand, getAllErrands, getErrandById, updateErrand, deleteErrand, getErrandByClientId, generateStartOtp } = require('../controllers/errandController');
 const { postErrandValidator } = require('../middleware/validator');
 const { authenticated } = require('../middleware/authenticate');
 const uploads = require('../middleware/multer'); // multer config for file uploads
@@ -369,5 +369,7 @@ router.delete('/errand/delete/:id', deleteErrand);
  */
 router.get('/errand/my-errands', authenticated, getErrandByClientId);
 
+router.put('/errands/generate-otp', authenticated, generateStartOtp)
+ 
 module.exports = router;
 

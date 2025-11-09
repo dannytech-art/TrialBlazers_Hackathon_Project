@@ -68,7 +68,6 @@ User.init(
         type: DataTypes.BOOLEAN,
         defaultValue: true
       },
-      
       otpVerified: {
         type: DataTypes.BOOLEAN,
         defaultValue: false
