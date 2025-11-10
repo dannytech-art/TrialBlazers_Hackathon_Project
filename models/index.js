@@ -100,6 +100,6 @@ db.Message.belongsTo(db.User, { foreignKey: 'receiverId', as: 'receiver' });
 // Export
 //
 db.sequelize = sequelize;
-db.Sequelize = Sequelize;
+
 
 module.exports = db;
