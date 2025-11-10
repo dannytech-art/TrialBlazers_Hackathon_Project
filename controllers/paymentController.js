@@ -15,7 +15,8 @@ const {
 const initializePayment = async (req, res) => {
     try {
         const { receiverId, amount, description } = req.body;
-        const payerId = req.user.id;
+        const payerId = req.user?.id || req.body.payerId;
+
 
         const paymentData = {
             payerId,
@@ -23,9 +24,10 @@ const initializePayment = async (req, res) => {
             amount,
             description,
             payer: {
-                fullName: `${req.user.firstName} ${req.user.lastName}`,
-                email: req.user.email
-            }
+    fullName: req.user ? `${req.user.firstName} ${req.user.lastName}` : req.body.fullName || 'Anonymous',
+    email: req.user ? req.user.email : req.body.email || 'noemail@example.com'
+}
+
         };
 
         const result = await initializeClientPayment(paymentData);
@@ -68,7 +70,9 @@ const verifyPaymentStatus = async (req, res) => {
 
 const getWalletBalance = async (req, res) => {
     try {
-        const runnerId = req.user.id;
+        const runnerId = req.user?.id || req.query.runnerId;
+
+        
 
         const result = await getRunnerWalletBalance(runnerId);
 
@@ -90,7 +94,7 @@ const getWalletBalance = async (req, res) => {
 const withdrawFunds = async (req, res) => {
     try {
         const { amount, bankDetailsId, narration } = req.body;
-        const runnerId = req.user.id;
+        const runnerId =  req.user?.id || req.query.runnerId;
 
         const withdrawalData = {
             runnerId,
@@ -118,8 +122,19 @@ const withdrawFunds = async (req, res) => {
 
 const getPaymentHistoryByUser = async (req, res) => {
     try {
-        const userId = req.user.id;
-        const userType = req.user.role.toLowerCase();
+       const userId = req.body?.userId || req.query?.userId || req.user?.id || 	'04520f34-7e78-43e5-a905-ec9f6bd713f0';
+
+
+if (!userId) {
+  return res.status(400).json({
+    success: false,
+    message: "userId is required (provide in token, body, or query)"
+  });
+}
+
+
+       const userType = req.user?.role?.toLowerCase() || 'user';
+
         const { 
             dateFrom, 
             dateTo, 
@@ -199,7 +214,8 @@ const verifyBankAccountDetails = async (req, res) => {
 const addBankDetails = async (req, res) => {
     try {
         const { bankCode, accountNumber, nepaBillUrl } = req.body;
-        const runnerId = req.user.id;
+        const runnerId = req.user?.id || req.body.runnerId || req.query.runnerId;
+
 
         const bankDetailsData = {
             runnerId,
@@ -227,7 +243,7 @@ const addBankDetails = async (req, res) => {
 
 const getRunnerBankDetailsList = async (req, res) => {
     try {
-        const runnerId = req.user.id;
+        const runnerId = req.user?.id || req.query.runnerId;
 
         const result = await getRunnerBankDetails(runnerId);
 

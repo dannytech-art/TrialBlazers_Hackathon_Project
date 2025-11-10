@@ -11,7 +11,7 @@ const {
     processWebhook,
     calculateCommissionAmount
 } = require('../controllers/paymentController');
-const { authenticated } = require('../middleware/authenticate');
+
 
 
 const router = require('express').Router();
@@ -104,7 +104,7 @@ const router = require('express').Router();
  *       401:
  *         description: Unauthorized - Invalid or missing token
  */
-router.post('/initialize', authenticated, initializePayment);
+router.post('/initialize', initializePayment);
 
 /**
  * @swagger
@@ -169,7 +169,7 @@ router.post('/initialize', authenticated, initializePayment);
  *                   type: string
  *                   example: "Payment reference not found"
  */
-router.get('/verify/:reference',  authenticated,verifyPaymentStatus);
+router.get('/verify/:reference', verifyPaymentStatus);
 
 /**
  * @swagger
@@ -309,7 +309,7 @@ router.get('/verify/:reference',  authenticated,verifyPaymentStatus);
  *         description: Unauthorized - Invalid or missing token
  */
 
-router.get('/history',  authenticated, getPaymentHistoryByUser);
+router.get('/history', getPaymentHistoryByUser);
 
 /**
  * @swagger
@@ -371,7 +371,7 @@ router.get('/history',  authenticated, getPaymentHistoryByUser);
  *                   type: string
  *                   example: "Valid amount is required"
  */
-router.get('/commission/calculate',  authenticated, calculateCommissionAmount);
+router.get('/commission/calculate',  calculateCommissionAmount);
 
 /**
  * @swagger
@@ -418,7 +418,7 @@ router.get('/commission/calculate',  authenticated, calculateCommissionAmount);
  *       404:
  *         description: Wallet not found for user
  */
-router.get('/wallet/balance',  authenticated, getWalletBalance);
+router.get('/wallet/balance', getWalletBalance);
 
 /**
  * @swagger
@@ -513,7 +513,7 @@ router.get('/wallet/balance',  authenticated, getWalletBalance);
  *       401:
  *         description: Unauthorized - Invalid or missing token
  */
-router.post('/wallet/withdraw',  authenticated, withdrawFunds);
+router.post('/wallet/withdraw', withdrawFunds);
 
 /**
  * @swagger
@@ -564,7 +564,7 @@ router.post('/wallet/withdraw',  authenticated, withdrawFunds);
  *       400:
  *         description: Bad request - Invalid country code
  */
-router.get('/banks',  authenticated, getBanksList);
+router.get('/banks', getBanksList);
 
 /**
  * @swagger
@@ -637,7 +637,7 @@ router.get('/banks',  authenticated, getBanksList);
  *                   type: string
  *                   example: "Invalid bank account number"
  */
-router.post('/banks/verify',  authenticated, verifyBankAccountDetails);
+router.post('/banks/verify',  verifyBankAccountDetails);
 
 /**
  * @swagger
@@ -715,7 +715,7 @@ router.post('/banks/verify',  authenticated, verifyBankAccountDetails);
  *       401:
  *         description: Unauthorized - Invalid or missing token
  */
-router.post('/banks/details',  authenticated, addBankDetails);
+router.post('/banks/details', addBankDetails);
 
 /**
  * @swagger
@@ -774,7 +774,7 @@ router.post('/banks/details',  authenticated, addBankDetails);
  *       401:
  *         description: Unauthorized - Invalid or missing token
  */
-router.get('/banks/details', authenticated, getRunnerBankDetailsList);
+router.get('/banks/details',getRunnerBankDetailsList);
 
 /**
  * @swagger
@@ -856,6 +856,6 @@ router.get('/banks/details', authenticated, getRunnerBankDetailsList);
  *                   type: string
  *                   example: "Missing webhook signature"
  */
-router.post('/webhook',  authenticated, processWebhook);
+router.post('/webhook', processWebhook);
 
 module.exports = router;

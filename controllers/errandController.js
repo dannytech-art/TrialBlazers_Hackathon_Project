@@ -81,6 +81,7 @@ exports.getAllErrands = async (req, res) => {
 
     res.status(200).json({
       message: 'All errands retrieved successfully',
+      totalErrands: errands.length,
       data: errands,
     });
   } catch (error) {
