@@ -63,6 +63,7 @@ const initializeClientPayment = async (paymentData) => {
             currency: 'NGN',
             status: 'pending',
             koraResponse: response.data,
+            redirect_url: 'https://test-checkout.korapay.com/KPY-PI-202511102111rEZbaG16762/pay',
             paymentUrl: response.data?.data?.checkout_url || null,
             message: 'Payment initialized successfully'
         };
