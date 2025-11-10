@@ -190,9 +190,11 @@ exports.acceptRunnerApplication = async (req, res) => {
       { status: 'Rejected' },
       { where: { errandId, id: { [Op.ne]: applicationId } } }
     );
+    const startOTP = Math.floor(1000 + Math.random() * 9000).toString();
+    const deliveryOTP = Math.floor(1000 + Math.random() * 9000).toString();
 
     // Assign the errand to this runner
-    await errand.update({ assignedTo: application.runnerId, status: 'Assigned' });
+    await errand.update({ assignedTo: application.runnerId, status: 'Assigned', startOTP, deliveryOTP, startOTPExpires: null, deliveryOTPExpires: null });
 
     return res.status(200).json({
       message: 'Runner application accepted successfully',
@@ -204,5 +206,48 @@ exports.acceptRunnerApplication = async (req, res) => {
   } catch (error) {
     console.error('Error in acceptRunnerApplication:', error);
     return res.status(500).json({ message: 'Internal Server Error', error: error.message });
+  }
+};
+
+exports.rejectRunnerApplication = async (req, res) => {
+  try {
+    const { errandId, applicationId } = req.params;
+    const clientId = req.user.id;
+
+    // Verify the errand exists and belongs to the client
+    const errand = await Errand.findByPk(errandId);
+    if (!errand) return res.status(404).json({ message: 'Errand not found' });
+    if (errand.userId !== clientId)
+      return res.status(403).json({ message: 'You are not authorized to reject applications for this errand' });
+
+    // Verify the application exists and belongs to this errand
+    const application = await RunnerApplication.findByPk(applicationId);
+    if (!application || application.errandId !== errandId)
+      return res.status(404).json({ message: 'Runner application not found for this errand' });
+
+    // Update application status to 'Rejected'
+    await application.update({ status: 'Rejected' });
+
+      const remaining = await RunnerApplication.count({
+      where: { errandId, status: 'Pending' },
+    });
+
+    if (remaining === 0) {
+      await errand.update({ status: 'Open' }); // or "Pending", depending on your business logic
+    }
+
+    return res.status(200).json({
+      message: 'Runner application rejected successfully',
+      data: {
+        rejectedApplication: application,
+        errand,
+      },
+    });
+  } catch (error) {
+    console.error('Error rejecting runner application:', error);
+    res.status(500).json({
+      message: 'Internal server error',
+      error: error.message,
+    });
   }
 };
