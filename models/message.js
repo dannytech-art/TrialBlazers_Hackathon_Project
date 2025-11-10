@@ -19,6 +19,10 @@ Message.init(
         type: DataTypes.STRING,
         allowNull: false
       },
+      roomId: {
+        type: DataTypes.STRING,
+        allowNull: true
+      },
       text: {
         type: DataTypes.STRING,
         allowNull: false

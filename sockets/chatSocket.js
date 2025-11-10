@@ -1,17 +1,13 @@
 // sockets/chatSocket.js
 const { Op } = require("sequelize");
 const Message = require("../models/message");
-const jwt = require("jsonwebtoken"); // for verifying tokens
+const jwt = require("jsonwebtoken");
 
-/**
- * Initializes socket.io chat events.
- * Each chat is a private room between sender and receiver.
- */
 function initializeChatSocket(io) {
   io.on("connection", (socket) => {
     console.log(`User connected: ${socket.id}`);
 
-    // Step 1: Authenticate user using token from frontend
+    // Step 1: Authenticate user using token
     const token = socket.handshake.auth?.token;
     if (!token) {
       console.log("No token provided — disconnecting socket");
@@ -20,51 +16,49 @@ function initializeChatSocket(io) {
 
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
-      socket.userId = decoded.id; // Save user ID for this socket session
+      socket.userId = decoded.id;
       console.log(`Authenticated user: ${socket.userId}`);
     } catch (error) {
       console.log("Invalid token — disconnecting socket");
       return socket.disconnect(true);
     }
 
-    // Step 2: When a user joins a private room
+    // Step 2: Join private room between sender & receiver
     socket.on("join_room", ({ senderId, receiverId }) => {
       const roomId = [senderId, receiverId].sort().join("_");
       socket.join(roomId);
+      socket.roomId = roomId; // store room ID for later use
       console.log(`User ${senderId} joined room ${roomId}`);
     });
 
-    // Step 3: When a user sends a message
+    // Step 3: When user sends a message
     socket.on("send_message", async (data) => {
       const { senderId, receiverId, text } = data;
+      const roomId = [senderId, receiverId].sort().join("_");
 
       if (!senderId || !receiverId || !text) {
         console.error("Missing message data");
         return;
       }
 
-      const roomId = [senderId, receiverId].sort().join("_");
-
       try {
-        // Save to DB
+        // Save message including roomId
         const message = await Message.create({
           senderId,
           receiverId,
           text,
-          // If you added roomId in Message model, include it here
-          // roomId,
+          roomId, 
         });
 
-        // Send message only to users in that private room
+        // Send message to both participants in the room
         io.to(roomId).emit("receive_message", message);
-
-        console.log(`Message sent in room ${roomId}`);
+        console.log(`Message saved & sent in room ${roomId}`);
       } catch (error) {
         console.error("Error saving message:", error.message);
       }
     });
 
-    // Step 4: When user disconnects
+    // Step 4: Disconnect
     socket.on("disconnect", () => {
       console.log(`User disconnected: ${socket.id}`);
     });
