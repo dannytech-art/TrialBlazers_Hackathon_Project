@@ -26,6 +26,7 @@ const initializeClientPayment = async (paymentData) => {
             amount: paymentData.amount,
             currency: 'NGN',
             narration: paymentData.description || 'Payment transaction',
+            redirect_url:'https://test-checkout.korapay.com/KPY-PI-202511101808s75fT033639/pay' ,
             customer: {
                 name: paymentData.payer.fullName || 'Anonymous User',
                 email: paymentData.payer.email
@@ -478,14 +479,14 @@ const getPaymentHistory = async (userId, userType, filters = {}) => {
             throw new Error('User ID is required');
         }
         
-        if (!['client', 'runner'].includes(userType)) {
+        if (!['Client', 'Runner'].includes(userType)) {
             throw new Error('User type must be either "client" or "runner"');
         }
         
         console.log(`Getting payment history for ${userType}: ${userId}`);
         
         let whereClause = {};
-        if (userType === 'client') {
+        if (userType === 'Client') {
             whereClause = { payerId: userId };
         } else {
             whereClause = { receiverId: userId };
@@ -523,12 +524,12 @@ const getPaymentHistory = async (userId, userType, filters = {}) => {
                 {
                     model: require('../../../models/users'),
                     as: 'payer',
-                    attributes: ['id', 'firstName', 'lastName', 'email', 'phoneNumber']
+                    attributes: ['id', 'firstName', 'lastName', 'email']
                 },
                 {
                     model: require('../../../models/users'),
                     as: 'receiver',
-                    attributes: ['id', 'firstName', 'lastName', 'email', 'phoneNumber']
+                    attributes: ['id', 'firstName', 'lastName', 'email']
                 }
             ]
         });

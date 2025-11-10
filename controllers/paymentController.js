@@ -1,3 +1,4 @@
+const User = require('../models/users');
 const {
     initializeClientPayment,
     verifyPayment,
@@ -122,10 +123,10 @@ const withdrawFunds = async (req, res) => {
 
 const getPaymentHistoryByUser = async (req, res) => {
     try {
-       const userId = req.body?.userId || req.query?.userId || req.user?.id || 	'04520f34-7e78-43e5-a905-ec9f6bd713f0';
+       const userId = req.user.id
+const user = await User.findByPk(userId)
 
-
-if (!userId) {
+if (!user) {
   return res.status(400).json({
     success: false,
     message: "userId is required (provide in token, body, or query)"
@@ -133,7 +134,7 @@ if (!userId) {
 }
 
 
-       const userType = req.user?.role?.toLowerCase() || 'user';
+       const userType = req.user?.role || 'user';
 
         const { 
             dateFrom, 
@@ -213,16 +214,10 @@ const verifyBankAccountDetails = async (req, res) => {
 
 const addBankDetails = async (req, res) => {
     try {
-        const { bankCode, accountNumber, nepaBillUrl } = req.body;
+        const { bankCode, bankName, accountNumber, accountName } = req.body;
         const runnerId = req.user?.id || req.body.runnerId || req.query.runnerId;
 
-
-        const bankDetailsData = {
-            runnerId,
-            bankCode,
-            accountNumber,
-            nepaBillUrl
-        };
+        const bankDetailsData = { runnerId, bankCode, bankName, accountNumber, accountName };
 
         const result = await addRunnerBankDetails(bankDetailsData);
 

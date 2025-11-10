@@ -127,44 +127,59 @@ const verifyBankAccount = async (accountData) => {
 
 const addRunnerBankDetails = async (bankDetailsData) => {
     try {
-        validateBankDetailsData(bankDetailsData);
-        
-        console.log(`Adding bank details for runner: ${bankDetailsData.runnerId}`);
-        
+        // Validate required fields
+        const { runnerId, bankCode, accountNumber, accountName, bankName } = bankDetailsData;
+        if (!runnerId || !bankCode || !accountNumber || !accountName || !bankName) {
+            throw new Error('runnerId, bankCode, bankName, accountNumber, and accountName are required');
+        }
+
+        console.log(`Adding bank details for runner: ${runnerId}`);
+
+        // Check if runner exists
         const runner = await User.findOne({
-            where: { 
-                id: bankDetailsData.runnerId,
+            where: {
+                id: runnerId,
                 role: 'Runner'
             }
         });
-        
+
         if (!runner) {
-            throw new Error(`User ${bankDetailsData.runnerId} is not a runner or does not exist`);
+            throw new Error(`User ${runnerId} is not a runner or does not exist`);
         }
-        
-        const verificationResult = await verifyBankAccount({
-            bank: bankDetailsData.bankCode,
-            account: bankDetailsData.accountNumber
+
+        // Check if bank details already exist
+        let bankDetails = await RunnerBankDetails.findOne({
+            where: {
+                runnerId,
+                accountNumber
+            }
         });
-        
-        const [bankDetails, created] = await RunnerBankDetails.upsert({
-            runnerId: bankDetailsData.runnerId,
-            bankCode: bankDetailsData.bankCode,
-            bankName: verificationResult.bankDetails.bankName,
-            accountNumber: bankDetailsData.accountNumber,
-            accountName: verificationResult.bankDetails.accountName,
-            isVerified: true,
-            isActive: true,
-            verificationDate: new Date()
-        }, {
-            returning: true
-        });
-        
-        console.log(`Bank details ${created ? 'added' : 'updated'} successfully`);
-        console.log(`Bank: ${bankDetails.bankName}`);
-        console.log(`Account: ${bankDetails.accountNumber}`);
-        console.log(`Account Name: ${bankDetails.accountName}`);
-        
+
+        if (bankDetails) {
+            // Update existing record
+            bankDetails.bankCode = bankCode;
+            bankDetails.bankName = bankName;
+            bankDetails.accountName = accountName;
+            bankDetails.isVerified = true; // you can verify using KoraPay if needed
+            bankDetails.isActive = true;
+            bankDetails.verificationDate = new Date();
+            await bankDetails.save();
+            console.log(`Bank details updated successfully`);
+        } else {
+            // Create new record
+            bankDetails = await RunnerBankDetails.create({
+                runnerId,
+                bankCode,
+                bankName,
+                accountNumber,
+                accountName,
+                isVerified: true,
+                isActive: true,
+                verificationDate: new Date()
+            });
+            console.log(`Bank details added successfully`);
+        }
+
         return {
             success: true,
             bankDetailsId: bankDetails.id,
@@ -177,9 +192,9 @@ const addRunnerBankDetails = async (bankDetailsData) => {
             },
             isVerified: bankDetails.isVerified,
             isActive: bankDetails.isActive,
-            message: `Bank details ${created ? 'added' : 'updated'} successfully`
+            message: 'Bank details added or updated successfully'
         };
-        
+
     } catch (error) {
         console.error('Error adding runner bank details:', error);
         throw new Error(`Failed to add bank details: ${error.message}`);
