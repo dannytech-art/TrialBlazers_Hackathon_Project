@@ -6,6 +6,7 @@ const {
   getRunnerApplications,
   getErrandApplicationsForArunner,
   acceptRunnerApplication,
+  rejectRunnerApplication,
 } = require('../controllers/applicationController');
 const { authenticated } = require('../middleware/authenticate');
 
@@ -372,27 +373,30 @@ router.get('/applicant/:errandId/:runnerId', authenticated, getErrandApplication
  * @swagger
  * /api/v1/errands/{errandId}/applications/{applicationId}/accept:
  *   patch:
- *     summary: Accept a runner application for an errand
- *     description: Allows a client to accept a runner who applied for their errand. Other applications for the same errand are automatically rejected.
- *     tags: [Errands]
+ *     summary: Accept a runner's application for an errand
+ *     description: Allows a **Client** to accept one of the runner applications for a specific errand. When accepted, the errand becomes **Assigned** and two OTP codes (Start OTP and Delivery OTP) are generated for secure pickup and delivery verification.
+ *     tags:
+ *       - Errands
  *     security:
- *       - bearerAuth: []
+ *       - BearerAuth: []
  *     parameters:
  *       - name: errandId
  *         in: path
  *         required: true
- *         description: The ID of the errand.
+ *         description: The ID of the errand to assign
  *         schema:
  *           type: string
+ *           format: uuid
  *       - name: applicationId
  *         in: path
  *         required: true
- *         description: The ID of the runner’s application to accept.
+ *         description: The ID of the runner's application to accept
  *         schema:
  *           type: string
+ *           format: uuid
  *     responses:
  *       200:
- *         description: Runner application accepted successfully
+ *         description: Runner application accepted successfully and OTPs generated
  *         content:
  *           application/json:
  *             schema:
@@ -405,17 +409,155 @@ router.get('/applicant/:errandId/:runnerId', authenticated, getErrandApplication
  *                   type: object
  *                   properties:
  *                     acceptedApplication:
- *                       $ref: '#/components/schemas/RunnerApplication'
+ *                       type: object
+ *                       description: The details of the accepted runner application
+ *                       properties:
+ *                         id:
+ *                           type: string
+ *                           example: 4b1fa5a8-9a5b-42cb-97b2-07ac7b1d4093
+ *                         status:
+ *                           type: string
+ *                           example: Accepted
+ *                         runnerId:
+ *                           type: string
+ *                           example: 0f90aef8-9e5f-41b7-9b0c-fdc438a9a22e
+ *                         errandId:
+ *                           type: string
+ *                           example: 671edc29-3b64-44d9-a354-0a4a537a0df9
  *                     errand:
- *                       $ref: '#/components/schemas/Errand'
+ *                       type: object
+ *                       description: The updated errand assigned to the runner
+ *                       properties:
+ *                         id:
+ *                           type: string
+ *                           example: 671edc29-3b64-44d9-a354-0a4a537a0df9
+ *                         title:
+ *                           type: string
+ *                           example: Deliver a food package to Lekki Phase 1
+ *                         status:
+ *                           type: string
+ *                           example: Assigned
+ *                         assignedTo:
+ *                           type: string
+ *                           example: 0f90aef8-9e5f-41b7-9b0c-fdc438a9a22e
+ *                         startOTP:
+ *                           type: string
+ *                           example: "4821"
+ *                         deliveryOTP:
+ *                           type: string
+ *                           example: "9634"
+ *                         startOTPExpires:
+ *                           type: string
+ *                           nullable: true
+ *                           example: null
+ *                         deliveryOTPExpires:
+ *                           type: string
+ *                           nullable: true
+ *                           example: null
  *       400:
- *         description: Invalid request or unauthorized action
+ *         description: Invalid request (unauthorized or missing parameters)
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: You are not authorized to accept applications for this errand
  *       404:
  *         description: Errand or application not found
- *       500:
- *         description: Internal Server Error
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Application not found for this errand
  */
-router.patch(
-  '/errands/:errandId/applications/:applicationId/accept', authenticated, acceptRunnerApplication);
+router.patch('/errands/:errandId/applications/:applicationId/accept', authenticated, acceptRunnerApplication);
+
+/**
+ * @swagger
+ * /api/v1/errands/{errandId}/applications/{applicationId}/reject:
+ *   patch:
+ *     summary: Reject a runner's application for a specific errand
+ *     description: Allows a **Client** to reject a specific runner's application for an errand they posted.
+ *     tags:
+ *       - Errands
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - name: errandId
+ *         in: path
+ *         required: true
+ *         description: The unique ID of the errand
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *       - name: applicationId
+ *         in: path
+ *         required: true
+ *         description: The unique ID of the runner's application to be rejected
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: Runner application rejected successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Runner application rejected successfully
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     rejectedApplication:
+ *                       type: object
+ *                       description: The details of the rejected runner's application
+ *                       properties:
+ *                         id:
+ *                           type: string
+ *                           example: 0c21b8c2-421b-4cf3-9f9f-531dcb239c58
+ *                         status:
+ *                           type: string
+ *                           example: Rejected
+ *                         runnerId:
+ *                           type: string
+ *                           example: 892f4bcd-d8ab-4659-b6ed-74d18b3f4af0
+ *                         errandId:
+ *                           type: string
+ *                           example: f0f9d7a0-324f-4788-a746-290e51e3a89f
+ *                     errand:
+ *                       type: object
+ *                       description: The updated errand details
+ *                       properties:
+ *                         id:
+ *                           type: string
+ *                           example: f0f9d7a0-324f-4788-a746-290e51e3a89f
+ *                         title:
+ *                           type: string
+ *                           example: Deliver a package to Lagos Island
+ *                         status:
+ *                           type: string
+ *                           example: Open
+ *       400:
+ *         description: Bad request (Invalid input or unauthorized user)
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: You are not authorized to reject applications for this errand
+ *       404:
+ *         description: Errand or runner application not found
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Runner application not found for this errand
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Internal server error
+ *               error: "Error details..."
+ */
+router.patch('/errands/:errandId/applications/:applicationId/reject', authenticated, rejectRunnerApplication);
+
 
 module.exports = router;

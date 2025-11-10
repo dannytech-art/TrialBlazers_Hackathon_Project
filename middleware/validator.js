@@ -78,35 +78,85 @@ exports.resendValidator = (req, res, next) => {
   }
   next();
 };
+
 exports.postErrandValidator = (req, res, next) => {
   const schema = Joi.object({
-    title: Joi.string().trim().required().messages({
-      'string.empty': 'Title is required',
-    }),
-    description: Joi.string().trim().required().messages({
-      'string.empty': 'Description is required',
-    }),
-    pickupAddress: Joi.string().trim().required().messages({
-      'string.empty': 'Pickup address is required',
-    }),
-    deliveryAddress: Joi.string().trim().required().messages({
-      'string.empty': 'Delivery address is required',
-    }),
-    pickupContact: Joi.string().trim().required().messages({
-      'string.empty': 'Pickup contact is required',
-    }),
-    price: Joi.number().positive().required().messages({
-      'number.base': 'Price must be a number',
-      'number.positive': 'Price must be a positive number',
-      'any.required': 'Price is required',
-    }),
-    attachments: Joi.string().allow(null, '').optional(),
+    title: Joi.string()
+      .trim()
+      .min(3)
+      .max(100)
+      .pattern(/^[A-Za-z0-9\s.,'-]+$/)
+      .required()
+      .messages({
+        'string.empty': 'Title is required',
+        'string.min': 'Title must be at least 3 characters long',
+        'string.pattern.base': 'Title can only contain letters, numbers, spaces, and punctuation',
+      }),
+
+    description: Joi.string()
+      .trim()
+      .min(10)
+      .max(500)
+      .required()
+      .messages({
+        'string.empty': 'Description is required',
+        'string.min': 'Description must be at least 10 characters long',
+      }),
+
+    pickupAddress: Joi.string()
+      .trim()
+      .min(5)
+      .pattern(/^(?!\d+$)[A-Za-z0-9\s,.'-]+$/)
+      .required()
+      .messages({
+        'string.empty': 'Pickup address is required',
+        'string.pattern.base': 'Pickup address cannot contain only numbers',
+      }),
+
+    deliveryAddress: Joi.string()
+      .trim()
+      .min(5)
+      .pattern(/^(?!\d+$)[A-Za-z0-9\s,.'-]+$/)
+      .required()
+      .messages({
+        'string.empty': 'Delivery address is required',
+        'string.pattern.base': 'Delivery address cannot contain only numbers',
+      }),
+
+    pickupContact: Joi.string()
+      .trim()
+      .pattern(/^\+?[0-9]{7,15}$/)
+      .required()
+      .messages({
+        'string.empty': 'Pickup contact is required',
+        'string.pattern.base': 'Pickup contact must be a valid phone number',
+      }),
+
+    price: Joi.number()
+      .positive()
+      .precision(2)
+      .required()
+      .messages({
+        'number.base': 'Price must be a number',
+        'number.positive': 'Price must be a positive number',
+        'any.required': 'Price is required',
+      }),
+
+    attachments: Joi.string()
+      .uri()
+      .allow(null, '')
+      .optional()
+      .messages({
+        'string.uri': 'Attachments must be a valid URL',
+      }),
   });
+
   const { error } = schema.validate(req.body, { abortEarly: true });
   if (error) {
     return res.status(400).json({
-      message: 'Validation error: ' + error.message
+      message: 'Validation error: ' + error.message,
     });
   }
+
   next();
 };

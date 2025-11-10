@@ -21,6 +21,10 @@ module.exports = {
         type: Sequelize.TEXT('long'), // supports large messages
         allowNull: false
       },
+      roomId: {
+        type: Sequelize.STRING,
+        allowNull: true
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { createErrand, getAllErrands, getErrandById, updateErrand, deleteErrand, getErrandByClientId, generateStartOtp } = require('../controllers/errandController');
+const { createErrand, getAllErrands, getErrandById, updateErrand, deleteErrand, getErrandByClientId, generateStartOtp, generateDeliveryOtp, verifyStartOtp, verifyDeliveryOtp } = require('../controllers/errandController');
 const { postErrandValidator } = require('../middleware/validator');
 const { authenticated } = require('../middleware/authenticate');
 const uploads = require('../middleware/multer'); // multer config for file uploads
@@ -369,7 +369,110 @@ router.delete('/errand/delete/:id', deleteErrand);
  */
 router.get('/errand/my-errands', authenticated, getErrandByClientId);
 
-router.put('/errands/generate-otp', authenticated, generateStartOtp)
+/**
+ * @swagger
+ * /api/v1/errands/{errandId}/verify-start:
+ *   put:
+ *     summary: Verify Start OTP (Runner confirms pickup)
+ *     description: Allows the **Runner** to verify the 4-digit Start OTP sent by the **Client**. Once verified, it confirms that the runner has started the errand (pickup confirmed).
+ *     tags:
+ *       - OTP Verification
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - name: errandId
+ *         in: path
+ *         required: true
+ *         description: The ID of the errand being verified
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - otp
+ *             properties:
+ *               otp:
+ *                 type: string
+ *                 example: "4821"
+ *     responses:
+ *       200:
+ *         description: Start OTP verified successfully
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Start OTP verified for Runner
+ *       400:
+ *         description: Invalid OTP or verification failure
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Invalid OTP
+ *       404:
+ *         description: Errand or application not found
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Errand not found
+ */
+router.put('/errands/:errandId/verify-start', authenticated, verifyStartOtp);
+
+/**
+ * @swagger
+ * /api/v1/errands/{errandId}/verify-delivery:
+ *   put:
+ *     summary: Verify Delivery OTP (Runner confirms delivery completion)
+ *     description: Allows the **Runner** to verify the 4-digit Delivery OTP shared by the **Client**. Once verified, the system confirms the delivery is completed.
+ *     tags:
+ *       - OTP Verification
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - name: errandId
+ *         in: path
+ *         required: true
+ *         description: The ID of the errand being verified
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - otp
+ *             properties:
+ *               otp:
+ *                 type: string
+ *                 example: "9634"
+ *     responses:
+ *       200:
+ *         description: Delivery OTP verified successfully
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Delivery OTP verified for Runner
+ *       400:
+ *         description: Invalid OTP or verification failure
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Invalid OTP
+ *       404:
+ *         description: Errand or application not found
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Errand not found
+ */
+router.put('/errands/:errandId/verify-delivery', authenticated, verifyDeliveryOtp)
+
  
 module.exports = router;
 
