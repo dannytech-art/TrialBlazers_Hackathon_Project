@@ -94,6 +94,14 @@ User.init(
     timestamps: true
   },
 );
+User.associate = (models) => {
+  // A user (runner) can have many applications
+  User.hasMany(models.RunnerApplication, {
+    foreignKey: 'runnerId',
+    as: 'applications',
+  });
+};
+
 
 
 module.exports = User;
