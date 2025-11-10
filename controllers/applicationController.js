@@ -192,7 +192,7 @@ exports.acceptRunnerApplication = async (req, res) => {
     );
 
     // Assign the errand to this runner
-    await errand.update({ assignedTo: application.runnerId, status: 'In Progress' });
+    await errand.update({ assignedTo: application.runnerId, status: 'Assigned' });
 
     return res.status(200).json({
       message: 'Runner application accepted successfully',
