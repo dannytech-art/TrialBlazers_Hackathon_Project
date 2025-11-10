@@ -91,6 +91,11 @@ db.RunnerBankDetails.belongsTo(db.User, { foreignKey: 'runnerId', as: 'runner' }
 db.Errand.hasOne(db.Payment, { foreignKey: 'errandId', as: 'payment' });
 db.Payment.belongsTo(db.Errand, { foreignKey: 'errandId', as: 'errand' });
 
+// ---------- MESSAGES ----------
+db.User.hasMany(db.Message, { foreignKey: 'senderId', as: 'sentMessages' });
+db.User.hasMany(db.Message, { foreignKey: 'receiverId', as: 'receivedMessages' });
+db.Message.belongsTo(db.User, { foreignKey: 'senderId', as: 'sender' });
+db.Message.belongsTo(db.User, { foreignKey: 'receiverId', as: 'receiver' });
 //
 // Export
 //
