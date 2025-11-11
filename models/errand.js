@@ -75,6 +75,34 @@ Errand.init(
         this.setDataValue('attachments', JSON.stringify(value));
       },
     },
+    orderAssignedAt: {
+  type: DataTypes.DATE,
+  allowNull: true,
+},
+headingToPickupAt: {
+  type: DataTypes.DATE,
+  allowNull: true,
+},
+arrivedAtPickupAt: {
+  type: DataTypes.DATE,
+  allowNull: true,
+},
+itemPickedAt: {
+  type: DataTypes.DATE,
+  allowNull: true,
+},
+headingToDeliveryAt: {
+  type: DataTypes.DATE,
+  allowNull: true,
+},
+arrivedAtDeliveryAt: {
+  type: DataTypes.DATE,
+  allowNull: true,
+},
+deliveredConfirmedAt: {
+  type: DataTypes.DATE,
+  allowNull: true,
+},
   },
   {
     sequelize,

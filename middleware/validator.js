@@ -95,12 +95,12 @@ exports.postErrandValidator = (req, res, next) => {
 
     description: Joi.string()
       .trim()
-      .min(10)
+      .min(1)
       .max(500)
       .required()
       .messages({
         'string.empty': 'Description is required',
-        'string.min': 'Description must be at least 10 characters long',
+        'string.min': 'Description must be at least a characters long',
       }),
 
     pickupAddress: Joi.string()

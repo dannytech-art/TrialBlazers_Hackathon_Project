@@ -68,18 +68,50 @@ module.exports = {
         type: Sequelize.TEXT,
         allowNull: true,
       },
-     createdAt: {
-  allowNull: false,
-  type: Sequelize.DATE,
-},
-updatedAt: {
-  allowNull: false,
-  type: Sequelize.DATE,
-}
+      orderAssignedAt: {
+        type: Sequelize.DATE,
+        allowNull: true,
+      },
+      headingToPickupAt: {
+        type: Sequelize.DATE,
+        allowNull: true,
+      },
+      arrivedAtPickupAt: {
+        type: Sequelize.DATE,
+        allowNull: true,
+      },
+      itemPickedAt: {
+        type: Sequelize.DATE,
+        allowNull: true,
+      },
+      headingToDeliveryAt: {
+        type: Sequelize.DATE,
+        allowNull: true,
+      },
+      arrivedAtDeliveryAt: {
+        type: Sequelize.DATE,
+        allowNull: true,
+      },
+      deliveredConfirmedAt: {
+        type: Sequelize.DATE,
+        allowNull: true,
+      },
+
+      // Default Sequelize timestamps
+      createdAt: {
+        allowNull: false,
+        type: Sequelize.DATE,
+      },
+      updatedAt: {
+        allowNull: false,
+        type: Sequelize.DATE,
+      },
     });
   },
 
   async down(queryInterface, Sequelize) {
+    // Drop ENUM before dropping table to avoid errors in PostgreSQL
+    await queryInterface.sequelize.query('DROP TYPE IF EXISTS "enum_Errands_status";');
     await queryInterface.dropTable('Errands');
   },
 };
