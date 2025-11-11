@@ -99,7 +99,7 @@ exports.getErrandById = async (req, res) => {
     const foundErrand = await Errand.findByPk(id, {
       include: [
         { model: User, as: 'poster', attributes: ['id', 'firstName', 'lastName', 'email'] },
-        { model: User, as: 'assignedRunner', attributes: ['id', 'firstName', 'lastName', 'email'] },
+        { model: User, as: 'assignedRunner', attributes: ['id', 'firstName', 'lastName', 'email', 'rating', 'bio', 'totalJobs'] },
       ],
     });
 

@@ -109,7 +109,7 @@ const router = express.Router();
  *                   type: string
  *                   example: Failed to send message
  */
-router.post('/:errandId', authenticated, sendMessage);
+router.post('/:errandId', sendMessage);
 
 
 /**

@@ -37,8 +37,22 @@ const io = new Server(server, {
 });
 
 // Import modular Socket.IO logic
-const initializeChatSocket = require('./sockets/chatSocket');
-initializeChatSocket(io);
+const { initializeIO } = require('./controllers/messageController');
+initializeIO(io);
+io.on("connection", (socket) => {
+  console.log(`User connected: ${socket.id}`);
+
+  socket.on("join_room", ({ senderId, receiverId }) => {
+    const roomId = [senderId, receiverId].sort().join("_");
+    socket.join(roomId);
+    console.log(`User joined room: ${roomId}`);
+  });
+
+  socket.on("disconnect", () => {
+    console.log(`User disconnected: ${socket.id}`);
+  });
+});
+
 
 // ---- MIDDLEWARES ----
 app.use(express.json());
@@ -70,7 +84,6 @@ app.use('/api/v1', dashboardRouter);
 
 
 
-
 // Swagger setup here (as in your current code)
 const swaggerJSDoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
@@ -92,12 +105,12 @@ const swaggerDefinition = {
   },
   servers: [
     {
-      url: 'http://localhost:8080',
-      description: 'Development server',
+      url: 'https://errandhive-project.onrender.com',
+      description: 'Production server',
     },
     {
-      url: ' https://errandhive-project.onrender.com',
-      description: 'Production server',
+      url: 'http://localhost:8080',
+      description: 'Development server',
     },
   ],
   components: {
@@ -106,16 +119,13 @@ const swaggerDefinition = {
         type: 'http',
         scheme: 'bearer',
         bearerFormat: 'JWT',
-        description: 'Enter your JWT token in the format: **Bearer <token>**',
+        description: 'Enter JWT as **Bearer <token>**',
       },
     },
   },
-  security: [
-    {
-      bearerAuth: [],
-    },
-  ],
+  security: [{ bearerAuth: [] }],
 };
+
 const options = { swaggerDefinition, apis: ['./routes/*.js'] };
 const swaggerSpec = swaggerJSDoc(options);
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
