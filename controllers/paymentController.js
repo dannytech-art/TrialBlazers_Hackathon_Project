@@ -205,7 +205,6 @@ const addBankDetails = async (req, res) => {
             runnerId,
             bankCode,
             accountNumber,
-            nepaBillUrl
         };
 
         const result = await addRunnerBankDetails(bankDetailsData);
