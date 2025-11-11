@@ -11,7 +11,9 @@ const {
     processWebhook,
     calculateCommissionAmount
 } = require('../controllers/paymentController');
-const { authenticated } = require('../middleware/authenticate');
+
+const { authenticated } = require('../middleware/authenticate')
+
 
 
 const router = require('express').Router();
@@ -104,7 +106,7 @@ const router = require('express').Router();
  *       401:
  *         description: Unauthorized - Invalid or missing token
  */
-router.post('/initialize', authenticated, initializePayment);
+router.post('/initialize/:bookingId',authenticated, initializePayment);
 
 /**
  * @swagger
@@ -169,147 +171,55 @@ router.post('/initialize', authenticated, initializePayment);
  *                   type: string
  *                   example: "Payment reference not found"
  */
-router.get('/verify/:reference',  authenticated,verifyPaymentStatus);
+router.get('/verify/:reference', verifyPaymentStatus);
 
 /**
  * @swagger
  * /api/v1/payment/history:
  *   get:
- *     summary: Get payment history
- *     description: Retrieves payment transaction history for the authenticated user with optional filtering.
+ *     summary: Get payment history for authenticated user
+ *     description: Retrieves the payment history of the authenticated user.
  *     tags: [Payment]
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - in: query
+ *         name: receiverId
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: ID of the receiver to filter payment history
+ *         example: "123e4567-e89b-12d3-a456-426614174000"
+ *       - in: query
  *         name: dateFrom
  *         schema:
  *           type: string
  *           format: date
- *         description: Start date for filtering (YYYY-MM-DD)
- *         example: "2024-11-01"
+ *         description: Start date for filtering
  *       - in: query
  *         name: dateTo
  *         schema:
  *           type: string
  *           format: date
- *         description: End date for filtering (YYYY-MM-DD)
- *         example: "2024-12-01"
+ *         description: End date for filtering
  *       - in: query
  *         name: status
  *         schema:
  *           type: string
  *           enum: [Pending, Paid, Failed]
  *         description: Filter by payment status
- *         example: "Paid"
- *       - in: query
- *         name: type
- *         schema:
- *           type: string
- *           enum: [sent, received]
- *         description: Filter by payment type (sent or received)
- *         example: "sent"
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *           minimum: 1
- *           maximum: 100
- *           default: 20
- *         description: Number of records to return
- *         example: 20
- *       - in: query
- *         name: offset
- *         schema:
- *           type: integer
- *           minimum: 0
- *           default: 0
- *         description: Number of records to skip
- *         example: 0
  *     responses:
  *       200:
  *         description: Payment history retrieved successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: "Payment history retrieved successfully"
- *                 data:
- *                   type: object
- *                   properties:
- *                     payments:
- *                       type: array
- *                       items:
- *                         type: object
- *                         properties:
- *                           id:
- *                             type: string
- *                             format: uuid
- *                             example: "123e4567-e89b-12d3-a456-426614174000"
- *                           amount:
- *                             type: number
- *                             example: 5000.00
- *                           description:
- *                             type: string
- *                             example: "Payment for grocery shopping errand"
- *                           status:
- *                             type: string
- *                             enum: [Pending, Paid, Failed]
- *                             example: "Paid"
- *                           createdAt:
- *                             type: string
- *                             format: date-time
- *                             example: "2024-12-01T10:30:00Z"
- *                           payer:
- *                             type: object
- *                             properties:
- *                               id:
- *                                 type: string
- *                                 format: uuid
- *                               firstName:
- *                                 type: string
- *                                 example: "John"
- *                               lastName:
- *                                 type: string
- *                                 example: "Doe"
- *                           receiver:
- *                             type: object
- *                             properties:
- *                               id:
- *                                 type: string
- *                                 format: uuid
- *                               firstName:
- *                                 type: string
- *                                 example: "Jane"
- *                               lastName:
- *                                 type: string
- *                                 example: "Smith"
- *                     pagination:
- *                       type: object
- *                       properties:
- *                         total:
- *                           type: integer
- *                           example: 50
- *                         limit:
- *                           type: integer
- *                           example: 20
- *                         offset:
- *                           type: integer
- *                           example: 0
- *                         hasMore:
- *                           type: boolean
- *                           example: true
  *       401:
- *         description: Unauthorized - Invalid or missing token
+ *         description: Unauthorized - Missing or invalid token
  */
+router.get('/history', authenticated, getPaymentHistoryByUser);
 
-router.get('/history',  authenticated, getPaymentHistoryByUser);
+
+router.get('/history', authenticated, getPaymentHistoryByUser);
+
+
 
 /**
  * @swagger
@@ -371,7 +281,7 @@ router.get('/history',  authenticated, getPaymentHistoryByUser);
  *                   type: string
  *                   example: "Valid amount is required"
  */
-router.get('/commission/calculate',  authenticated, calculateCommissionAmount);
+router.get('/commission/calculate',  calculateCommissionAmount);
 
 /**
  * @swagger
@@ -418,7 +328,7 @@ router.get('/commission/calculate',  authenticated, calculateCommissionAmount);
  *       404:
  *         description: Wallet not found for user
  */
-router.get('/wallet/balance',  authenticated, getWalletBalance);
+router.get('/wallet/balance', getWalletBalance);
 
 /**
  * @swagger
@@ -513,7 +423,7 @@ router.get('/wallet/balance',  authenticated, getWalletBalance);
  *       401:
  *         description: Unauthorized - Invalid or missing token
  */
-router.post('/wallet/withdraw',  authenticated, withdrawFunds);
+router.post('/wallet/withdraw', withdrawFunds);
 
 /**
  * @swagger
@@ -564,7 +474,7 @@ router.post('/wallet/withdraw',  authenticated, withdrawFunds);
  *       400:
  *         description: Bad request - Invalid country code
  */
-router.get('/banks',  authenticated, getBanksList);
+router.get('/banks', getBanksList);
 
 /**
  * @swagger
@@ -637,7 +547,7 @@ router.get('/banks',  authenticated, getBanksList);
  *                   type: string
  *                   example: "Invalid bank account number"
  */
-router.post('/banks/verify',  authenticated, verifyBankAccountDetails);
+router.post('/banks/verify',  verifyBankAccountDetails);
 
 /**
  * @swagger
@@ -715,20 +625,57 @@ router.post('/banks/verify',  authenticated, verifyBankAccountDetails);
  *       401:
  *         description: Unauthorized - Invalid or missing token
  */
-router.post('/banks/details',  authenticated, addBankDetails);
+router.post('/banks/details', authenticated, addBankDetails);
 
 /**
  * @swagger
  * /api/v1/payment/banks/details:
- *   get:
- *     summary: Get runner's bank account details
- *     description: Retrieves all bank account details for the authenticated runner.
+ *   post:
+ *     summary: Add runner bank account details
+ *     description: Adds or updates a bank account for the authenticated runner.
  *     tags: [Bank]
  *     security:
  *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               runnerId:
+ *                 type: string
+ *                 format: uuid
+ *                 description: Runner's user ID (optional if using authenticated token)
+ *                 example: "123e4567-e89b-12d3-a456-426614174000"
+ *               bankCode:
+ *                 type: string
+ *                 description: Bank code
+ *                 example: "033"
+ *               bankName:
+ *                 type: string
+ *                 description: Name of the bank
+ *                 example: "First Bank of Nigeria"
+ *               accountNumber:
+ *                 type: string
+ *                 description: Bank account number
+ *                 example: "1234567890"
+ *               accountName:
+ *                 type: string
+ *                 description: Name of the account holder
+ *                 example: "John Doe"
+ *               nepaBillUrl:
+ *                 type: string
+ *                 format: uri
+ *                 description: Optional URL to a utility bill for verification
+ *                 example: "https://example.com/nepa-bill.jpg"
+ *             required:
+ *               - bankCode
+ *               - accountNumber
+ *               - accountName
  *     responses:
- *       200:
- *         description: Bank details retrieved successfully
+ *       201:
+ *         description: Bank details added or updated successfully
  *         content:
  *           application/json:
  *             schema:
@@ -739,42 +686,49 @@ router.post('/banks/details',  authenticated, addBankDetails);
  *                   example: true
  *                 message:
  *                   type: string
- *                   example: "Bank details retrieved successfully"
+ *                   example: "Bank details added successfully"
  *                 data:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       id:
- *                         type: string
- *                         format: uuid
- *                         example: "123e4567-e89b-12d3-a456-426614174000"
- *                       bankCode:
- *                         type: string
- *                         example: "033"
- *                       bankName:
- *                         type: string
- *                         example: "First Bank of Nigeria"
- *                       accountNumber:
- *                         type: string
- *                         example: "1234567890"
- *                       accountName:
- *                         type: string
- *                         example: "John Doe"
- *                       isVerified:
- *                         type: boolean
- *                         example: true
- *                       isActive:
- *                         type: boolean
- *                         example: true
- *                       createdAt:
- *                         type: string
- *                         format: date-time
- *                         example: "2024-12-01T10:30:00Z"
+ *                   type: object
+ *                   properties:
+ *                     bankDetailsId:
+ *                       type: string
+ *                       format: uuid
+ *                       example: "123e4567-e89b-12d3-a456-426614174000"
+ *                     runnerId:
+ *                       type: string
+ *                       format: uuid
+ *                       example: "123e4567-e89b-12d3-a456-426614174000"
+ *                     bankDetails:
+ *                       type: object
+ *                       properties:
+ *                         bankCode:
+ *                           type: string
+ *                           example: "033"
+ *                         bankName:
+ *                           type: string
+ *                           example: "First Bank of Nigeria"
+ *                         accountNumber:
+ *                           type: string
+ *                           example: "1234567890"
+ *                         accountName:
+ *                           type: string
+ *                           example: "John Doe"
+ *                     isVerified:
+ *                       type: boolean
+ *                       example: true
+ *                     isActive:
+ *                       type: boolean
+ *                       example: true
+ *       400:
+ *         description: Bad request - Missing or invalid fields
  *       401:
  *         description: Unauthorized - Invalid or missing token
+ *       404:
+ *         description: Runner not found
  */
-router.get('/banks/details', authenticated, getRunnerBankDetailsList);
+
+
+router.get('/banks/details',getRunnerBankDetailsList);
 
 /**
  * @swagger
@@ -856,6 +810,6 @@ router.get('/banks/details', authenticated, getRunnerBankDetailsList);
  *                   type: string
  *                   example: "Missing webhook signature"
  */
-router.post('/webhook',  authenticated, processWebhook);
+router.post('/webhook', processWebhook);
 
 module.exports = router;
