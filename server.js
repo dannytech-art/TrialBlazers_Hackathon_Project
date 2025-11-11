@@ -19,6 +19,7 @@ const applicationRouter = require('./routes/applicationRoute');
 const adminRouter = require('./routes/adminRoute');
 const processMondayPayments = require('./routes/schedulepayment');
 const deliveryProgressRouter = require('./routes/deliveryProgressRouter');
+const dashboardRouter = require('./routes/dashboardRouter');
 
 const app = express();
 const server = http.createServer(app);
@@ -58,6 +59,7 @@ app.use('/api/v1', applicationRouter);
 app.use('/api/v1', adminRouter);
 app.use('/api/v1', processMondayPayments);
 app.use('/api/v1', deliveryProgressRouter);
+app.use('/api/v1', dashboardRouter);
 
 
 
