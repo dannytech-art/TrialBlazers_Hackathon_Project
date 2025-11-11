@@ -62,6 +62,7 @@ app.use('/api/v1/messages', messageRouter);
 app.use('/api/v1', applicationRouter);
 app.use('/api/v1', adminRouter);
 app.use('/api/v1', processMondayPayments);
+app.use('/api/v1/errands', deliveryProgressRouter);
 
 app.use('/api/v1',refundPayment);
 app.use('/api/v1', deliveryProgressRouter);
