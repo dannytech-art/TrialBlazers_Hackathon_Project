@@ -7,7 +7,7 @@ const cors = require('cors');
 const sequelize = require('./database/databases');
 const session = require('express-session');
 const passport = require('passport');
-// const schedulePayment = require('./controllers/postPaymentController')
+const schedulePayment = require('./controllers/paymentSchedule');
 
 // Routers
 const userRouter = require('./routes/userRoute');
@@ -18,7 +18,12 @@ const messageRouter = require('./routes/messageRouter');
 const applicationRouter = require('./routes/applicationRoute');
 const adminRouter = require('./routes/adminRoute');
 const processMondayPayments = require('./routes/schedulepayment');
+
+const refundPayment = require('./routes/refundpayment');
+
 const deliveryProgressRouter = require('./routes/deliveryProgressRouter');
+const dashboardRouter = require('./routes/dashboardRouter');
+
 
 const app = express();
 const server = http.createServer(app);
@@ -57,7 +62,10 @@ app.use('/api/v1/messages', messageRouter);
 app.use('/api/v1', applicationRouter);
 app.use('/api/v1', adminRouter);
 app.use('/api/v1', processMondayPayments);
+
+app.use('/api/v1',refundPayment);
 app.use('/api/v1/errands', deliveryProgressRouter);
+app.use('/api/v1', dashboardRouter);
 
 
 
