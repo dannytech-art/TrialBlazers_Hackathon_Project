@@ -12,14 +12,13 @@ const initializePayment = async (req, res) => {
 
         const findBooking = await Errands.findByPk(bookingId);
 
-        console.log("booking id",bookingId)
         if (!findBooking) {
             return res.status(404).json({
                 success: false,
                 message: 'Booking not found'
             });
         }
-console.log(findBooking)
+
         // create payment record
         const payment = await Payment.create({
             payerId: findBooking.userId,
@@ -30,7 +29,9 @@ console.log(findBooking)
         });
 
         const koraPayload = {
-            reference: findBooking.id,
+   
+            reference: `${findBooking.id}_${Math.floor(Math.random()*2300)}`,
+
             amount: findBooking.price,
             currency: 'NGN',
             redirect_url: 'https://errand-hive.vercel.app/dashboard/success',
@@ -38,8 +39,10 @@ console.log(findBooking)
                 name: req.user?.firstName || 'Anonymous User',
                 email: req.user?.email
             },
-        };
+              narration: description || 'Errand payment', 
 
+        };
+console.log(koraPayload )
         const response = await axios.post(
             `https://api.korapay.com/merchant/api/v1/charges/initialize`,
             koraPayload,
@@ -65,10 +68,12 @@ console.log(findBooking)
         });
 
     } catch (error) {
+        console.error('Kora Error Response:', error.response?.data);
+
         console.error('Error initializing payment:', error);
         res.status(400).json({
             success: false,
-            message: error.message
+            message:  error.response?.data
         });
     }
 };
@@ -116,7 +121,6 @@ const getWalletBalance = async (req, res) => {
         });
     }
 };
-//hey
 
 const withdrawFunds = async (req, res) => {
     try {
@@ -188,7 +192,7 @@ if (!user) {
             message: 'Payment history retrieved successfully',
             data: result
         });
-        //obade
+        //
 
     } catch (error) {
         console.error('Error getting payment history:', error);
