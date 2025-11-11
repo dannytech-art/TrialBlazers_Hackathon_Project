@@ -119,7 +119,7 @@ const withdrawFunds = async (req, res) => {
 const getPaymentHistoryByUser = async (req, res) => {
     try {
         const userId = req.user.id;
-        const userType = req.user.role.toLowerCase();
+        const userType = req.user.role;
         const { 
             dateFrom, 
             dateTo, 
