@@ -1,7 +1,6 @@
-const Message = require("../models/message");
 const { Sequelize } = require("sequelize");
-const User = require("../models/users");
-const Errand = require("../models/errand");
+const { Errand, Message, User } = require('../models'); //
+
 exports.getMessages = async (req, res) => {
   const { errandId } = req.params;
 
@@ -35,23 +34,30 @@ exports.getMessages = async (req, res) => {
   }
 };
 
+let ioInstance; // we'll store io reference here
+
+// called from server.js to inject io
+exports.initializeIO = (io) => {
+  ioInstance = io;
+};
+
 exports.sendMessage = async (req, res) => {
-  const { text } = req.body;
-  const { errandId } = req.params;
-  const senderId = req.user.id; // from authenticated token
-
-  if (!errandId || !text) {
-    return res.status(400).json({ error: "Missing errandId or text" });
-  }
-
   try {
-    const errand = await Errand.findByPk(errandId);
+    const { text, senderId } = req.body;
+    const { errandId } = req.params;
 
+    if (!errandId || !text || !senderId) {
+      return res.status(400).json({ error: "Missing errandId, senderId or text" });
+    }
+
+    const errand = await Errand.findByPk(errandId);
     if (!errand) {
       return res.status(404).json({ error: "Errand not found" });
     }
 
-    // determine receiver based on who initiated
+    console.log("Errand fetched:", errand.dataValues);
+
+    // determine receiver based on who sent the message
     const receiverId =
       errand.assignedTo === senderId ? errand.userId : errand.assignedTo;
 
@@ -61,6 +67,7 @@ exports.sendMessage = async (req, res) => {
 
     const roomId = [senderId, receiverId].sort().join("_");
 
+    // Save message
     const message = await Message.create({
       senderId,
       receiverId,
@@ -98,6 +105,14 @@ exports.sendMessage = async (req, res) => {
         },
       ],
     });
+
+    // Broadcast message through socket.io if ioInstance exists
+    if (ioInstance) {
+      ioInstance.to(roomId).emit("receive_message", fullMessage);
+      console.log(`Socket message sent to room ${roomId}`);
+    } else {
+      console.log("Socket.io not initialized");
+    }
 
     res.status(201).json({
       message: "Message sent successfully",
