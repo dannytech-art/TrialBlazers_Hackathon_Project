@@ -8,90 +8,87 @@ const config = require('../config');
 const { validatePaymentData, validateWithdrawalData, validateBankDetailsData, validateAccountData } = require('../validation');
 const { calculateCommission, determinePaymentType, determinePaymentDirection, getCounterparty, calculateWalletImpact } = require('../utils');
 
-const initializeClientPayment = async (paymentData) => {
-    try {
-        validatePaymentData(paymentData);
+// const initializeClientPayment = async (paymentData) => {
+//     try {
+//         validatePaymentData(paymentData);
         
-        const payment = await Payment.create({
-            payerId: paymentData.payerId,
-            receiverId: paymentData.receiverId,
-            amount: paymentData.amount / 100,
-            description: paymentData.description,
-            paymentStatus: 'Pending',
-            paymentMethod: 'KoraPay'
-        });
+//         const payment = await Payment.create({
+//             payerId: paymentData.payerId,
+//             receiverId: paymentData.receiverId,
+//             amount: paymentData.amount / 100,
+//             description: paymentData.description,
+//             paymentStatus: 'Pending',
+//             paymentMethod: 'KoraPay'
+//         });
         
-        const koraPayload = {
-            reference: payment.id,
-            amount: paymentData.amount,
-            currency: 'NGN',
-            narration: paymentData.description || 'Payment transaction',
-            redirect_url:'https://test-checkout.korapay.com/KPY-PI-202511101808s75fT033639/pay' ,
-            customer: {
-                name: paymentData.payer.fullName || 'Anonymous User',
-                email: paymentData.payer.email
-            },
-            notification_url: `${config.BASE_URL}/api/payment/webhook`
-        };
+//         const koraPayload = {
+//             reference: payment.id,
+//             amount: paymentData.amount,
+//             currency: 'NGN',
+//             narration: paymentData.description || 'Payment transaction',
+//             redirect_url: 'https://errand-hive.vercel.app/dashboard/success',
+//             customer: {
+//                 name: paymentData.payer.fullName || 'Anonymous User',
+//                 email: paymentData.payer.email
+//             },
+//             notification_url: `${config.BASE_URL}/api/payment/webhook`
+//         };
         
-        const response = await axios.post(
-            `${config.KORA_API_URL}/charges/initialize`,
-            koraPayload,
-            {
-                headers: {
-                    Authorization: `Bearer ${config.KORA_SECRET_KEY}`,
-                    'Content-Type': 'application/json'
-                },
-                timeout: 10000
-            }
-        );
+//         const response = await axios.post(
+//             `${config.KORA_API_URL}/charges/initialize`,
+//             koraPayload,
+//             {
+//                 headers: {
+//                     Authorization: `Bearer ${config.KORA_SECRET_KEY}`,
+//                     'Content-Type': 'application/json'
+//                 },
+//                 timeout: 10000
+//             }
+//         );
         
-        if (response.data && response.data.data) {
-            await Payment.update(
-                {
-                    transactionId: response.data.data.reference || payment.id,
-                    paymentStatus: response.data.data.status || 'Pending'
-                },
-                { where: { id: payment.id } }
-            );
-        }
+//         if (response.data && response.data.data) {
+//             await Payment.update(
+//                 {
+//                     transactionId: response.data.data.reference || payment.id,
+//                     paymentStatus: response.data.data.status || 'Pending'
+//                 },
+//                 { where: { id: payment.id } }
+//             );
+//         }
         
-        return {
-            success: true,
-            paymentId: payment.id,
-            transactionId: payment.id,
-            amount: paymentData.amount,
-            currency: 'NGN',
-            status: 'pending',
-            koraResponse: response.data,
-            paymentUrl: response.data?.data?.checkout_url || null,
-            message: 'Payment initialized successfully'
-        };
+//         return {
         
-    } catch (error) {
-        console.error('Error initializing client payment:', error);
+//             amount: paymentData.amount,
+//             currency: 'NGN',
+//             status: 'pending',
+//             koraResponse: response.data,
+//             paymentUrl: response.data?.data?.checkout_url || null,
+//         };
         
-        if (paymentData.payerId && paymentData.receiverId) {
-            try {
-                await Payment.update(
-                    { paymentStatus: 'Failed' },
-                    { 
-                        where: { 
-                            payerId: paymentData.payerId,
-                            receiverId: paymentData.receiverId,
-                            paymentStatus: 'Pending'
-                        },
-                        limit: 1
-                    }
-                );
-            } catch (dbError) {
-                console.error('Error updating payment status:', dbError);
-            }
-        }
+//     } catch (error) {
+//         console.error('Error initializing client payment:', error);
         
-        throw new Error(`Failed to initialize payment: ${error.message}`);
-    }
-};
+//         if (paymentData.payerId && paymentData.receiverId) {
+//             try {
+//                 await Payment.update(
+//                     { paymentStatus: 'Failed' },
+//                     { 
+//                         where: { 
+//                             payerId: paymentData.payerId,
+//                             receiverId: paymentData.receiverId,
+//                             paymentStatus: 'Pending'
+//                         },
+//                         limit: 1
+//                     }
+//                 );
+//             } catch (dbError) {
+//                 console.error('Error updating payment status:', dbError);
+//             }
+//         }
+        
+//         throw new Error(`Failed to initialize payment: ${error.message}`);
+//     }
+// };
 
 const verifyPayment = async (reference) => {
     try {

@@ -22,6 +22,7 @@ const processMondayPayments = require('./routes/schedulepayment');
 const refundPayment = require('./routes/refundpayment');
 
 const deliveryProgressRouter = require('./routes/deliveryProgressRouter');
+const dashboardRouter = require('./routes/dashboardRouter');
 
 
 const app = express();
@@ -57,13 +58,14 @@ app.use('/api/v1', userRouter);
 app.use('/api/v1/payment', paymentRouter);
 app.use('/api/v1/kyc', kycRouter);
 app.use('/api/v1', errandRouter);
-app.use('/api/v1', messageRouter);
+app.use('/api/v1/messages', messageRouter);
 app.use('/api/v1', applicationRouter);
 app.use('/api/v1', adminRouter);
 app.use('/api/v1', processMondayPayments);
 
 app.use('/api/v1',refundPayment);
 app.use('/api/v1', deliveryProgressRouter);
+app.use('/api/v1', dashboardRouter);
 
 
 

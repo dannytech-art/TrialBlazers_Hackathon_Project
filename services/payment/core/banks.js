@@ -215,7 +215,7 @@ const getRunnerBankDetails = async (runnerId) => {
             success: true,
             runnerId: runnerId,
             bankDetails: bankDetails.map(detail => ({
-                id: detail.id,
+                id: detail.id, 
                 bankName: detail.bankName,
                 bankCode: detail.bankCode,
                 accountNumber: detail.accountNumber,

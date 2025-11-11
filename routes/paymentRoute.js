@@ -106,7 +106,7 @@ const router = require('express').Router();
  *       401:
  *         description: Unauthorized - Invalid or missing token
  */
-router.post('/initialize', initializePayment);
+router.post('/initialize/:bookingId',authenticated, initializePayment);
 
 /**
  * @swagger
@@ -184,6 +184,13 @@ router.get('/verify/:reference', verifyPaymentStatus);
  *       - bearerAuth: []
  *     parameters:
  *       - in: query
+ *         name: receiverId
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: ID of the receiver to filter payment history
+ *         example: "123e4567-e89b-12d3-a456-426614174000"
+ *       - in: query
  *         name: dateFrom
  *         schema:
  *           type: string
@@ -207,6 +214,9 @@ router.get('/verify/:reference', verifyPaymentStatus);
  *       401:
  *         description: Unauthorized - Missing or invalid token
  */
+router.get('/history', authenticated, getPaymentHistoryByUser);
+
+
 router.get('/history', authenticated, getPaymentHistoryByUser);
 
 
