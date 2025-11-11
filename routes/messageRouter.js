@@ -1,125 +1,27 @@
-const router = require('express').Router();
-const { getMessages, sendMessage } = require('../controllers/messageController');
+const express = require('express');
 const { authenticated } = require('../middleware/authenticate');
+const { sendMessage, getMessages } = require('../controllers/messageController');
+
+const router = express.Router();
 
 /**
  * @swagger
- * tags:
- *   name: Messages
- *   description: API for sending and retrieving chat messages between users
- */
-
-/**
- * @swagger
- * /api/v1/messages/{userId}:
- *   get:
- *     summary: Get all chat messages between the logged-in user and another user
+ * /api/v1/messages/{errandId}:
+ *   post:
+ *     summary: Send a message for a specific errand
+ *     description: Allows an authenticated user (Client or Runner) to send a message linked to a specific errand.  
+ *                  The errandId is passed in the URL parameters, and only the text of the message is sent in the body.
  *     tags: [Messages]
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: userId
+ *         name: errandId
+ *         required: true
  *         schema:
  *           type: string
- *         required: true
- *         description: The ID of the other user to fetch messages with
- *     responses:
- *       200:
- *         description: List of messages successfully retrieved
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Messages retrieved successfully"
- *                 data:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       id:
- *                         type: string
- *                         example: "9a25e7a8-4b7c-42ab-bc76-04b3f3f97f61"
- *                       senderId:
- *                         type: string
- *                         example: "c1a3b2d4-44e2-4b95-b8f3-bd87ed14e0a1"
- *                       receiverId:
- *                         type: string
- *                         example: "f4d3b8b2-22c5-4e9f-911a-cdf2a7e21c92"
- *                       text:
- *                         type: string
- *                         example: "Hello! I'm interested in your errand."
- *                       createdAt:
- *                         type: string
- *                         format: date-time
- *                         example: "2025-11-05T14:55:32.000Z"
- *                       sender:
- *                         type: object
- *                         properties:
- *                           id:
- *                             type: string
- *                             example: "c1a3b2d4-44e2-4b95-b8f3-bd87ed14e0a1"
- *                           firstName:
- *                             type: string
- *                             example: "Daniel"
- *                           lastName:
- *                             type: string
- *                             example: "Johnson"
- *                           email:
- *                             type: string
- *                             example: "daniel@example.com"
- *                           profileImage:
- *                             type: string
- *                             example: "https://res.cloudinary.com/dwzomhflw/image/upload/v1723123456/daniel.jpg"
- *                           rating:
- *                             type: number
- *                             example: 4.8
- *                           role:
- *                             type: string
- *                             example: "Runner"
- *                       receiver:
- *                         type: object
- *                         properties:
- *                           id:
- *                             type: string
- *                             example: "f4d3b8b2-22c5-4e9f-911a-cdf2a7e21c92"
- *                           firstName:
- *                             type: string
- *                             example: "Blessing"
- *                           lastName:
- *                             type: string
- *                             example: "Fasube"
- *                           email:
- *                             type: string
- *                             example: "fasubeblessing@gmail.com"
- *                           profileImage:
- *                             type: string
- *                             example: "https://res.cloudinary.com/dwzomhflw/image/upload/v1723123456/blessing.jpg"
- *                           rating:
- *                             type: number
- *                             example: 4.9
- *                           role:
- *                             type: string
- *                             example: "Client"
- *       400:
- *         description: Invalid request
- *       500:
- *         description: Server error
- */
-router.get('/messages/:userId', authenticated, getMessages);
-
-
-/**
- * @swagger
- * /api/v1/write/message:
- *   post:
- *     summary: Send a new message to another user
- *     tags: [Messages]
- *     security:
- *       - bearerAuth: []
+ *         description: The unique ID of the errand the message belongs to
+ *         example: 3d2f9b2e-77b5-4d85-94b3-233cf79a7e10
  *     requestBody:
  *       required: true
  *       content:
@@ -127,17 +29,11 @@ router.get('/messages/:userId', authenticated, getMessages);
  *           schema:
  *             type: object
  *             required:
- *               - receiverId
  *               - text
  *             properties:
- *               receiverId:
- *                 type: string
- *                 description: The ID of the user to send the message to
- *                 example: "f4d3b8b2-22c5-4e9f-911a-cdf2a7e21c92"
  *               text:
  *                 type: string
- *                 description: The message content
- *                 example: "Hey! Are you available for this errand?"
+ *                 example: "Hey, are you still available to pick up the package?"
  *     responses:
  *       201:
  *         description: Message sent successfully
@@ -148,79 +44,136 @@ router.get('/messages/:userId', authenticated, getMessages);
  *               properties:
  *                 message:
  *                   type: string
- *                   example: "Message sent successfully"
+ *                   example: Message sent successfully
  *                 data:
  *                   type: object
  *                   properties:
  *                     id:
  *                       type: string
- *                       example: "b92c52a5-3fcd-4d2b-9a43-b8eec5f90a92"
- *                     senderId:
- *                       type: string
- *                       example: "c1a3b2d4-44e2-4b95-b8f3-bd87ed14e0a1"
- *                     receiverId:
- *                       type: string
- *                       example: "f4d3b8b2-22c5-4e9f-911a-cdf2a7e21c92"
+ *                       example: 1a2b3c4d5e
  *                     text:
  *                       type: string
- *                       example: "Hey! Are you available for this errand?"
- *                     createdAt:
- *                       type: string
- *                       format: date-time
- *                       example: "2025-11-05T15:02:11.000Z"
+ *                       example: "Hey, are you still available to pick up the package?"
  *                     sender:
  *                       type: object
  *                       properties:
  *                         id:
  *                           type: string
- *                           example: "c1a3b2d4-44e2-4b95-b8f3-bd87ed14e0a1"
+ *                           example: f3f0b08b-d77b-4d0b-84f7-90ac346b6a77
  *                         firstName:
  *                           type: string
- *                           example: "Daniel"
+ *                           example: Daniel
  *                         lastName:
  *                           type: string
- *                           example: "Johnson"
- *                         email:
- *                           type: string
- *                           example: "daniel@example.com"
- *                         profileImage:
- *                           type: string
- *                           example: "https://res.cloudinary.com/dwzomhflw/image/upload/v1723123456/daniel.jpg"
- *                         rating:
- *                           type: number
- *                           example: 4.8
- *                         role:
- *                           type: string
- *                           example: "Runner"
+ *                           example: Johnson
  *                     receiver:
  *                       type: object
  *                       properties:
  *                         id:
  *                           type: string
- *                           example: "f4d3b8b2-22c5-4e9f-911a-cdf2a7e21c92"
+ *                           example: 9dfb93e9-7e73-42b7-a8c0-f6c3ef8f84b1
  *                         firstName:
  *                           type: string
- *                           example: "Blessing"
+ *                           example: Sarah
  *                         lastName:
  *                           type: string
- *                           example: "Fasube"
- *                         email:
- *                           type: string
- *                           example: "fasubeblessing@gmail.com"
- *                         profileImage:
- *                           type: string
- *                           example: "https://res.cloudinary.com/dwzomhflw/image/upload/v1723123456/blessing.jpg"
- *                         rating:
- *                           type: number
- *                           example: 4.9
- *                         role:
- *                           type: string
- *                           example: "Client"
+ *                           example: Doe
  *       400:
- *         description: Missing receiverId or text
+ *         description: Missing text or errand not assigned yet
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Errand has no assigned user yet
+ *       404:
+ *         description: Errand not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Errand not found
  *       500:
- *         description: Failed to send message
+ *         description: Internal Server Error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Failed to send message
  */
-router.post('/write/message', authenticated, sendMessage);
+router.post('/:errandId', authenticated, sendMessage);
+
+
+/**
+ * @swagger
+ * /api/v1/messages/{errandId}:
+ *   get:
+ *     summary: Get all messages for a specific errand
+ *     description: Retrieve all chat messages exchanged between the Client and Runner for a particular errand.
+ *     tags: [Messages]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: errandId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the errand to fetch messages for
+ *         example: 3d2f9b2e-77b5-4d85-94b3-233cf79a7e10
+ *     responses:
+ *       200:
+ *         description: Messages retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Messages retrieved successfully
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                         example: 1a2b3c4d5e
+ *                       text:
+ *                         type: string
+ *                         example: "Package picked up already"
+ *                       senderId:
+ *                         type: string
+ *                         example: f3f0b08b-d77b-4d0b-84f7-90ac346b6a77
+ *                       receiverId:
+ *                         type: string
+ *                         example: 9dfb93e9-7e73-42b7-a8c0-f6c3ef8f84b1
+ *                       createdAt:
+ *                         type: string
+ *                         format: date-time
+ *                         example: 2025-11-11T09:30:00.000Z
+ *       404:
+ *         description: No messages found for this errand
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: No messages found for this errand
+ *       500:
+ *         description: Internal Server Error
+ */
+router.get('/:errandId', authenticated, getMessages);
 
 module.exports = router;
