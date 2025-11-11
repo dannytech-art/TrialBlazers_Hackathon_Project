@@ -182,6 +182,13 @@ router.get('/verify/:reference',  authenticated,verifyPaymentStatus);
  *       - bearerAuth: []
  *     parameters:
  *       - in: query
+ *         name: receiverId
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: ID of the receiver to filter payment history
+ *         example: "123e4567-e89b-12d3-a456-426614174000"
+ *       - in: query
  *         name: dateFrom
  *         schema:
  *           type: string
@@ -309,7 +316,9 @@ router.get('/verify/:reference',  authenticated,verifyPaymentStatus);
  *         description: Unauthorized - Invalid or missing token
  */
 
-router.get('/history',  authenticated, getPaymentHistoryByUser);
+router.get('/history', authenticated, getPaymentHistoryByUser);
+
+
 
 /**
  * @swagger
