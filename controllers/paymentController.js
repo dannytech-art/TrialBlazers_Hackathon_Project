@@ -1,39 +1,67 @@
-const {
-    initializeClientPayment,
-    verifyPayment,
-    getRunnerWalletBalance,
-    processRunnerWithdrawal,
-    getPaymentHistory,
-    getBankList,
-    verifyBankAccount,
-    addRunnerBankDetails,
-    getRunnerBankDetails,
-    handleWebhook,
-    calculateCommission
-} = require('../services/payment');
+
+const User = require('../models/users');
+const Errands = require('../models/errand');
+const Payment = require('../models/payment');
+const axios = require('axios');
 
 const initializePayment = async (req, res) => {
     try {
-        const { receiverId, amount, description } = req.body;
-        const payerId = req.user.id;
 
-        const paymentData = {
-            payerId,
-            receiverId,
-            amount,
+        const { description } = req.body;
+        const bookingId = req.params.bookingId; // fixed typo
+
+        const findBooking = await Errands.findByPk(bookingId);
+
+        console.log("booking id",bookingId)
+        if (!findBooking) {
+            return res.status(404).json({
+                success: false,
+                message: 'Booking not found'
+            });
+        }
+console.log(findBooking)
+        // create payment record
+        const payment = await Payment.create({
+            payerId: findBooking.userId,
+            receiverId:findBooking.assignedTo,
+            amount: findBooking.price,
             description,
-            payer: {
-                fullName: `${req.user.firstName} ${req.user.lastName}`,
-                email: req.user.email
-            }
+            status: 'Pending'
+        });
+
+        const koraPayload = {
+            reference: findBooking.id,
+            amount: findBooking.price,
+            currency: 'NGN',
+            redirect_url: 'https://errand-hive.vercel.app/dashboard/success',
+            customer: {
+                name: req.user?.firstName || 'Anonymous User',
+                email: req.user?.email
+            },
         };
 
-        const result = await initializeClientPayment(paymentData);
+        const response = await axios.post(
+            `https://api.korapay.com/merchant/api/v1/charges/initialize`,
+            koraPayload,
+            {
+                headers: {
+                    Authorization: `Bearer ${process.env.KORA_SECRET_KEY}`,
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+
+        if (response.data && response.data.data) {
+            await payment.update({
+                transactionId: response.data.data.reference,
+                paymentStatus: response.data.data.status
+            });
+        }
 
         res.status(201).json({
             success: true,
             message: 'Payment initialized successfully',
-            data: result
+            data: response.data
         });
 
     } catch (error) {
@@ -68,7 +96,9 @@ const verifyPaymentStatus = async (req, res) => {
 
 const getWalletBalance = async (req, res) => {
     try {
-        const runnerId = req.user.id;
+        const runnerId = req.user?.id || req.query.runnerId;
+
+        
 
         const result = await getRunnerWalletBalance(runnerId);
 
@@ -86,11 +116,12 @@ const getWalletBalance = async (req, res) => {
         });
     }
 };
+//hey
 
 const withdrawFunds = async (req, res) => {
     try {
         const { amount, bankDetailsId, narration } = req.body;
-        const runnerId = req.user.id;
+        const runnerId =  req.user?.id || req.query.runnerId;
 
         const withdrawalData = {
             runnerId,
@@ -118,8 +149,21 @@ const withdrawFunds = async (req, res) => {
 
 const getPaymentHistoryByUser = async (req, res) => {
     try {
-        const userId = req.user.id;
-        const userType = req.user.role;
+
+       const userId = req.user.id
+const user = await User.findByPk(userId)
+
+if (!user) {
+  return res.status(400).json({
+    success: false,
+    message: "userId is required (provide in token, body, or query)"
+  });
+};
+
+
+       const userType = req.user?.role || 'user';
+     
+
         const { 
             dateFrom, 
             dateTo, 
@@ -144,6 +188,7 @@ const getPaymentHistoryByUser = async (req, res) => {
             message: 'Payment history retrieved successfully',
             data: result
         });
+        //obade
 
     } catch (error) {
         console.error('Error getting payment history:', error);
@@ -198,15 +243,10 @@ const verifyBankAccountDetails = async (req, res) => {
 
 const addBankDetails = async (req, res) => {
     try {
-        const { bankCode, accountNumber, nepaBillUrl } = req.body;
-        const runnerId = req.user.id;
+        const { bankCode, bankName, accountNumber, accountName } = req.body;
+        const runnerId = req.user?.id || req.body.runnerId || req.query.runnerId;
 
-        const bankDetailsData = {
-            runnerId,
-            bankCode,
-            accountNumber,
-            nepaBillUrl
-        };
+        const bankDetailsData = { runnerId, bankCode, bankName, accountNumber, accountName };
 
         const result = await addRunnerBankDetails(bankDetailsData);
 
@@ -227,7 +267,7 @@ const addBankDetails = async (req, res) => {
 
 const getRunnerBankDetailsList = async (req, res) => {
     try {
-        const runnerId = req.user.id;
+        const runnerId = req.user?.id || req.query.runnerId;
 
         const result = await getRunnerBankDetails(runnerId);
 

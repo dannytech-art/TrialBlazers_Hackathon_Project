@@ -11,6 +11,12 @@ Payment.init(
         type: DataTypes.UUID,
         defaultValue: DataTypes.UUIDV4
       },
+      errandId: {
+    type: DataTypes.UUID,
+    allowNull: true,
+    references: { model: 'Errands', key: 'id' }
+},
+
       payerId: {
         type: DataTypes.UUID,
         references: {model: 'Users', key: 'id'}
