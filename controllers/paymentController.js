@@ -81,7 +81,18 @@ console.log(koraPayload )
 const verifyPaymentStatus = async (req, res) => {
     try {
         const { reference } = req.params;
+const id = reference.split('_')[0];
+const errand = await Errands.findByPk(id);
 
+if (!errand) {
+    return res.status(404).json({
+        success: false,
+        message: 'Errand not found for the provided reference'
+    });
+}
+
+await errand.update({ paymentStatus: "paid" });
+        
         const result = await verifyPayment(reference);
 
         res.status(200).json({

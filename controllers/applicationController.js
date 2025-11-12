@@ -113,31 +113,40 @@ exports.getRunnerApplications = async (req, res) => {
   try {
     const runnerId = req.user.id;
 
-    const applications = await RunnerApplication.findAll({
-      where: { runnerId },
+    const applications = await RunnerApplication.findByPk({
+  where: { runnerId },
+  include: [
+    {
+      model: Errand,
+      as: 'errand',
+      attributes: ['id', 'title', 'description', 'price', 'status', 'userId'],
       include: [
         {
-          model: Errand,
-          as: 'errand',
-          attributes: ['id', 'title', 'description', 'price', 'status'],
-        },
-        {
           model: User,
-          as: 'runner',
-          attributes: ['id', 'firstName', 'lastname', 'totalJobs', 'bio' ]
-        }
+          as: 'poster',  // this is the user who posted the errand
+          attributes: ['id', 'firstName', 'lastname', 'email'],
+        },
       ],
-    });
+    },
+    {
+      model: User,
+      as: 'runner', // the runner who applied
+      attributes: ['id', 'firstName', 'lastname', 'totalJobs', 'bio'],
+    },
+  ],
+});
+
 
     res.status(200).json({
       message: 'Fetched runner applications successfully',
-      data: applications,
+      data: applications
     });
   } catch (error) {
     console.error('Error in getRunnerApplications:', error);
     res.status(500).json({ message: 'Internal Server Error', error: error.message });
   }
 };
+
 exports.getErrandApplicationsForArunner = async (req, res) => {
   try {
     const { errandId } = req.params;
