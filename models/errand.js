@@ -47,6 +47,10 @@ Errand.init(
       defaultValue: 'Open',
       allowNull: false,
     },
+      paymentStatus: {
+      type: DataTypes.ENUM('pending', 'paid', 'failed'),
+      defaultValue: 'pending',
+    },
     assignedTo: {
       type: DataTypes.UUID,
       references: { model: 'Users', key: 'id' },

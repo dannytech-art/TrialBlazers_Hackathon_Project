@@ -38,23 +38,29 @@ const io = new Server(server, {
 
 // Import modular Socket.IO logic
 const { initializeIO } = require('./controllers/messageController');
-initializeIO(io);
-io.on("connection", (socket) => {
-  console.log(`User connected: ${socket.id}`);
 
+
+io.on("connection", (socket) => {
+  console.log(`Use connected: ${socket.id}`);
+
+  // Join chat room (client ↔ runner)
   socket.on("join_room", ({ senderId, receiverId }) => {
     const roomId = [senderId, receiverId].sort().join("_");
     socket.join(roomId);
-    console.log(`User joined room: ${roomId}`);
+    console.log(" User joined room: ${roomId}");
   });
 
+  // Receive message from one side and broadcast to room
+  socket.on("send_message", (data) => {
+    const roomId = [data.senderId, data.receiverId].sort().join("_");
+    io.to(roomId).emit("receive_message", data);
+    console.log(` Message broadcast to room: ${roomId}, data.text`);
+  });
   socket.on("disconnect", () => {
-    console.log(`User disconnected: ${socket.id}`);
+    console.log(` User disconnected: ${socket.id}`);
   });
 });
-
-
-// ---- MIDDLEWARES ----
+// ---- MIDDLEWARES ----\
 app.use(express.json());
 app.use(cors({ origin: '*' }));
 

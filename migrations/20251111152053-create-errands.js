@@ -45,6 +45,7 @@ module.exports = {
         allowNull: false,
         defaultValue: 'Open',
       },
+     
       assignedTo: {
         type: Sequelize.UUID,
         allowNull: true,
