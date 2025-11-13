@@ -1,6 +1,6 @@
 const { application } = require('express');
 const db = require('../models');
-const {RunnerApplication, Errand, User, KYC } = db
+const {RunnerApplication, Errand, User, KYC, Notification } = db
 const { Op } = require('sequelize');
 
 exports.applyForErrand = async (req, res) => {
@@ -136,7 +136,6 @@ exports.getRunnerApplications = async (req, res) => {
   ],
 });
 
-
     res.status(200).json({
       message: 'Fetched runner applications successfully',
       data: applications
@@ -242,8 +241,7 @@ exports.getNotifications = async (req, res) => {
       order: [['createdAt', 'DESC']],
       limit, offset
     });
-
-    res.status(200).json({
+    res.status(200).json({ 
       total: count,
       page,
       perPage: limit,
@@ -266,7 +264,6 @@ exports.markAsRead = async (req, res) => {
     res.status(500).json({ message: 'Internal Server Error', error: err.message });
   }
 };
-
 
 exports.rejectRunnerApplication = async (req, res) => {
   try {
