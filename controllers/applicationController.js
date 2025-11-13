@@ -1,7 +1,7 @@
-const { application } = require('express');
 const db = require('../models');
 const {RunnerApplication, Errand, User, KYC, Notification } = db
 const { Op } = require('sequelize');
+const { sendMail } = require('../middleware/email');
 
 exports.applyForErrand = async (req, res) => {
   try {
