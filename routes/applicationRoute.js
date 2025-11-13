@@ -7,6 +7,8 @@ const {
   getErrandApplicationsForArunner,
   acceptRunnerApplication,
   rejectRunnerApplication,
+  getNotifications,
+  markAsRead,
 } = require('../controllers/applicationController');
 const { authenticated } = require('../middleware/authenticate');
 
@@ -558,6 +560,11 @@ router.patch('/errands/:errandId/applications/:applicationId/accept', authentica
  *               error: "Error details..."
  */
 router.patch('/errands/:errandId/applications/:applicationId/reject', authenticated, rejectRunnerApplication);
+
+router.get('/notifications', authenticated, getNotifications);
+
+router.put('/notifications/:id/read', authenticated, markAsRead);
+
 
 
 module.exports = router;
