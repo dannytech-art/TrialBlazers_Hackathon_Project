@@ -217,7 +217,7 @@ router.get('/verify/:reference', verifyPaymentStatus);
 router.get('/history', authenticated, getPaymentHistoryByUser);
 
 
-router.get('/history', authenticated, getPaymentHistoryByUser);
+
 
 
 
@@ -328,7 +328,7 @@ router.get('/commission/calculate',  calculateCommissionAmount);
  *       404:
  *         description: Wallet not found for user
  */
-router.get('/wallet/balance', getWalletBalance);
+router.get('/wallet/balance', authenticated,getWalletBalance);
 
 /**
  * @swagger
