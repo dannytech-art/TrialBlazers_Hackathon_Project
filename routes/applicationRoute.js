@@ -561,8 +561,166 @@ router.patch('/errands/:errandId/applications/:applicationId/accept', authentica
  */
 router.patch('/errands/:errandId/applications/:applicationId/reject', authenticated, rejectRunnerApplication);
 
+/**
+ * @swagger
+ * /notifications:
+ *   get:
+ *     summary: Get all user notifications
+ *     description: Returns a paginated list of notifications belonging to the authenticated user, sorted by most recent first.
+ *     tags: [Notifications]
+ *     security:
+ *       - bearerAuth: []      # JWT-based authentication
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         required: false
+ *         description: Page number for pagination (default is 1)
+ *         schema:
+ *           type: integer
+ *           example: 1
+ *       - in: query
+ *         name: limit
+ *         required: false
+ *         description: Number of notifications per page (default is 20)
+ *         schema:
+ *           type: integer
+ *           example: 20
+ *     responses:
+ *       200:
+ *         description: List of user notifications retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 total:
+ *                   type: integer
+ *                   example: 42
+ *                 page:
+ *                   type: integer
+ *                   example: 1
+ *                 perPage:
+ *                   type: integer
+ *                   example: 20
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                         format: uuid
+ *                         example: "e91e1a26-9fd1-45ef-b47f-00e2360a9a51"
+ *                       userId:
+ *                         type: string
+ *                         format: uuid
+ *                         example: "d5e2ac23-8ef9-4bbf-84d5-3b3c6b2988b4"
+ *                       type:
+ *                         type: string
+ *                         example: "application_accepted"
+ *                       message:
+ *                         type: string
+ *                         example: "Your application for 'Errand delivery' has been accepted."
+ *                       isRead:
+ *                         type: boolean
+ *                         example: false
+ *                       createdAt:
+ *                         type: string
+ *                         format: date-time
+ *                         example: "2025-11-10T12:34:56.000Z"
+ *                       updatedAt:
+ *                         type: string
+ *                         format: date-time
+ *                         example: "2025-11-10T12:35:56.000Z"
+ *       401:
+ *         description: Unauthorized – missing or invalid token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Unauthorized
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Internal Server Error
+ *                 error:
+ *                   type: string
+ *                   example: Cannot read properties of undefined (reading 'message')
+ */
 router.get('/notifications', authenticated, getNotifications);
 
+/**
+ * @swagger
+ * /notifications/{id}/read:
+ *   put:
+ *     summary: Mark a notification as read
+ *     description: Marks a specific user notification as read. Only the owner of the notification can perform this action.
+ *     tags: [Notifications]
+ *     security:
+ *       - bearerAuth: []       # JWT-based authentication
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: The unique ID of the notification to mark as read
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *           example: "a1b2c3d4-5678-90ab-cdef-1234567890ab"
+ *     responses:
+ *       200:
+ *         description: Notification marked as read successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Marked as read
+ *       401:
+ *         description: Unauthorized – missing or invalid token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Unauthorized
+ *       404:
+ *         description: Notification not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Notification not found
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Internal Server Error
+ *                 error:
+ *                   type: string
+ *                   example: Cannot read properties of undefined (reading 'message')
+ */
 router.put('/notifications/:id/read', authenticated, markAsRead);
 
 
