@@ -133,7 +133,7 @@ exports.getErrandByClientId = async (req, res) => {
     const userFromToken = req.user;
     const errands = await Errand.findAll({
       where: { userId: userFromToken.id },
-      include: [{ model: User, as: 'poster', attributes: ['id', 'firstName', 'lastName', 'email'] }],
+      include: [{ model: User, as: 'assignedRunner', attributes: ['id', 'firstName', 'lastName', 'email'] }],
       order: [['createdAt', 'DESC']],
     });
     res.status(200).json({

@@ -30,6 +30,8 @@ const Wallet = require('./wallet');
 const WalletTransaction = require('./wallettransaction');
 const RunnerBankDetails = require('./runnerbankdetails');
 const RunnerApplication = require('./runnerapplication');
+const Notification = require('./notification');
+
 
 // Register models
 db.Admin = Admin;
@@ -43,6 +45,9 @@ db.Wallet = Wallet;
 db.WalletTransaction = WalletTransaction;
 db.RunnerBankDetails = RunnerBankDetails;
 db.RunnerApplication = RunnerApplication;
+db.Notification = Notification;
+
+
 
 //
 
@@ -98,6 +103,10 @@ db.User.hasMany(db.Message, { foreignKey: 'senderId', as: 'sentMessages' });
 db.User.hasMany(db.Message, { foreignKey: 'receiverId', as: 'receivedMessages' });
 db.Message.belongsTo(db.User, { foreignKey: 'senderId', as: 'sender' });
 db.Message.belongsTo(db.User, { foreignKey: 'receiverId', as: 'receiver' });
+
+db.User.hasMany(db.Notification, { foreignKey: 'userId', as: 'notifications' });
+db.Notification.belongsTo(db.User, { foreignKey: 'userId', as: 'user' });
+
 //
 // Export
 //

@@ -79,7 +79,7 @@ const sendWalletTopUpEmail = async (runner, payment, amount, currency, transacti
             description
         );
         
-        await sendMail(runner.email, subject, htmlContent);
+    await sendMail(runner.email, subject, htmlContent);
         console.log(`Wallet top-up email sent to runner: ${runner.email}`);
         
     } catch (error) {

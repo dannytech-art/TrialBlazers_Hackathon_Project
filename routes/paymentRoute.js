@@ -217,8 +217,6 @@ router.get('/verify/:reference', verifyPaymentStatus);
 router.get('/history', authenticated, getPaymentHistoryByUser);
 
 
-router.get('/history', authenticated, getPaymentHistoryByUser);
-
 
 
 /**
