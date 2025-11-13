@@ -273,16 +273,17 @@ const topUpRunnerWallet = async (payment) => {
 
 const getRunnerWalletBalance = async (runnerId) => {
     try {
-        const runner = await User.findOne({
-            where: { 
-                id: runnerId,
-                role: 'Runner'
-            }
-        });
         
-        if (!runner) {
-            throw new Error(`User ${runnerId} is not a runner or does not exist`);
-        }
+        const runner = await User.findByPk(runnerId);
+
+if (!runner) {
+  throw new Error(`User ${runnerId} does not exist`);
+}
+
+if (runner.role !== 'Runner') {
+  throw new Error(`User ${runnerId} is not authorized to access runner wallet`);
+}
+
         
         let runnerWallet = await Wallet.findOne({
             where: { runnerId: runnerId }
@@ -639,7 +640,7 @@ const getPaymentSummary = async (userId, userType, whereClause) => {
 };
 
 module.exports = {
-    initializeClientPayment,
+    
     verifyPayment,
     topUpRunnerWallet,
     getRunnerWalletBalance,
