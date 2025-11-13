@@ -205,6 +205,18 @@ exports.acceptRunnerApplication = async (req, res) => {
     // Assign the errand to this runner
     await errand.update({ assignedTo: application.runnerId, status: 'Assigned', startOTP, deliveryOTP, startOTPExpires: null, deliveryOTPExpires: null });
 
+     const notification = await Notification.create({
+      userId: application.runnerId,
+      type: 'application_accepted',
+      message: `Your application for "${errand.title}" has been accepted.`,
+      meta: { errandId: errand.id, applicationId: application.id, startOTP, deliveryOTP }
+    });
+  
+    const client = await User.findByPk(clientId);
+    if (client?.email) {
+      // call your sendMail function or Brevo wrapper
+      await sendMail(client.email, 'Errand Accepted', `<p>Your posted errand "${errand.title}" was accepted.</p><p>Start OTP: ${startOTP}</p>`);
+    }
     return res.status(200).json({
       message: 'Runner application accepted successfully',
       data: {
@@ -217,6 +229,44 @@ exports.acceptRunnerApplication = async (req, res) => {
     return res.status(500).json({ message: 'Internal Server Error', error: error.message });
   }
 };
+
+exports.getNotifications = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const offset = (page - 1) * limit;
+
+    const { count, rows } = await Notification.findAndCountAll({
+      where: { userId },
+      order: [['createdAt', 'DESC']],
+      limit, offset
+    });
+
+    res.status(200).json({
+      total: count,
+      page,
+      perPage: limit,
+      data: rows
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Internal Server Error', error: error.message });
+  }
+};
+
+exports.markAsRead = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+    const notif = await Notification.findOne({ where: { id, userId } });
+    if (!notif) return res.status(404).json({ message: 'Notification not found' });
+    await notif.update({ isRead: true });
+    res.status(200).json({ message: 'Marked as read' });
+  } catch (error) {
+    res.status(500).json({ message: 'Internal Server Error', error: err.message });
+  }
+};
+
 
 exports.rejectRunnerApplication = async (req, res) => {
   try {

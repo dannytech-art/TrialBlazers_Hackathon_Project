@@ -217,10 +217,6 @@ router.get('/verify/:reference', verifyPaymentStatus);
 router.get('/history', authenticated, getPaymentHistoryByUser);
 
 
-
-
-
-
 /**
  * @swagger
  * /api/v1/payment/commission/calculate:
