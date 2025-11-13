@@ -60,6 +60,10 @@ exports.getErrandApplications = async (req, res) => {
   try {
     const { errandId } = req.params;
     const errand = await Errand.findByPk(errandId);
+    if (!errand) {
+      return res.status(404).json({ message: 'Errand not found' });
+    }
+
     const applications = await RunnerApplication.findAll({
       where: { errandId },
       include: [
