@@ -15,15 +15,15 @@ const verifyPayment = async (reference) => {
         }
         
         console.log(`Verifying payment with reference: ${reference}`);
+        console.log( "Authorization:", `Bearer ${process.env.KORA_SECRET_KEY}`);
         
-        const response = await axios.get(
-            `${config.KORA_API_URL}/transactions/${reference}`,
+        const response = await axios.post(
+            `${config.KORA_API_URL}/charges/${reference}`,
             {
                 headers: {
-                    Authorization: `Bearer ${config.KORA_SECRET_KEY}`,
+                    Authorization: `Bearer ${process.env.KORA_SECRET_KEY}`,
                     'Content-Type': 'application/json'
                 },
-                timeout: 10000
             }
         );
         

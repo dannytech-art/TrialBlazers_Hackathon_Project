@@ -80,38 +80,83 @@ console.log(koraPayload )
         });
     }
 };
+        
+      
+const verifyPaymentStatus = async (req, res, next) => {
+  try {
+    const { reference } = req.params;
 
-const verifyPaymentStatus = async (req, res) => {
-    try {
-        const { reference } = req.params;
-const id = reference.split('_')[0];
-const errand = await Errands.findByPk(id);
+    if (!reference) {
+      return res.status(400).json({ success: false, message: 'Reference is required' });
+    }
 
-if (!errand) {
-    return res.status(404).json({
+    console.log('reference:', reference);
+
+    // Extract errand id e.g "errandId_xxxxx"
+    const errandId = reference.split('_')[0];
+
+    const errand = await Errands.findByPk(errandId);
+
+    if (!errand) {
+      return res.status(404).json({
         success: false,
         message: 'Errand not found for the provided reference'
-    });
-}
-
-await errand.update({ paymentStatus: "paid" });
-        
-        const result = await verifyPayment(reference);
-
-        res.status(200).json({
-            success: true,
-            message: 'Payment verification completed',
-            data: result
-        });
-
-    } catch (error) {
-        console.error('Error verifying payment:', error);
-        res.status(400).json({
-            success: false,
-            message: error.message
-        });
+      });
     }
+
+    // Verify from KoraPay
+    const response = await axios.get(
+      `https://api.korapay.com/merchant/api/v1/charges/${reference}`,
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.KORA_SECRET_KEY}`,
+        },
+      }
+    );
+
+    const verifyData = response.data;
+
+    // Check if Kora says payment is successful
+    if (!verifyData || verifyData.data.status !== "success") {
+      return res.status(400).json({
+        success: false,
+        message: "Payment not successful",
+        koraResponse: verifyData
+      });
+    }
+
+    // Update errand paymentStatus
+    await errand.update({ paymentStatus: "Paid" });
+console.log("i am idd  ",errand)
+    // Save payment record
+    const payment = await Payment.create({
+        
+      errandId: errand.id,
+      payerId: errand.userId,
+      receiverId: errand.assignedTo,
+      amount: verifyData.data.amount,
+      description: verifyData.data.description || "Payment for errand",
+      transactionId: verifyData.data.reference,
+      paymentStatus: "Paid",
+      paymentMethod: "KoraPay",
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Payment verified successfully',
+      data: payment,
+    });
+
+  } catch (error) {
+    console.error('Payment verification error:', error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message
+    });
+  }
 };
+
 
 const getWalletBalance = async (req, res) => {
     try {
