@@ -1,5 +1,5 @@
 const router = require('express').Router();
-const { getClientDashboard } = require('../controllers/dashboardController');
+const { getClientDashboard, getRunnerDashboardSummary } = require('../controllers/dashboardController');
 const { authenticated } = require('../middleware/authenticate');
 
 /**
