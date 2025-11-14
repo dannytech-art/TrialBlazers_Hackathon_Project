@@ -6,21 +6,16 @@ const {KYC, User} = db
 exports.submitKYC = async (req, res) => {
   try {
     const userId = req.user.id;
-
-
     const { governmentIdCard, proofOfAddressImage, selfieWithIdCard } = req.files;
     
     if (!governmentIdCard || !proofOfAddressImage || !selfieWithIdCard) {
       return res.status(400).json({ message: 'All three documents are required' });
     }
     
-  
     const existingKYC = await KYC.findOne({ where: { userId } });
     if (existingKYC) {
       return res.status(400).json({ message: 'KYC already submitted for this user' });
     }
-
-    
 
     // Upload to Cloudinary one by one
     const uploadToCloudinary = async (file) => {

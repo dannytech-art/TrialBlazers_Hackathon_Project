@@ -1,6 +1,8 @@
 const { Op } = require("sequelize");
 const Errand = require("../models/errand");
-
+const User = require("../models/users");
+const Payment = require("../models/payment");
+const RunnerApplication = require("../models/runnerapplication");
 
 exports.getClientDashboard = async (req, res) => {
   try {
@@ -50,6 +52,74 @@ console.log('ID: ', clientId);
     return res.status(500).json({
       message: "Internal server error fetching dashboard data",
       error: error.message,
+    });
+  }
+};
+
+exports.getRunnerDashboardSummary = async (req, res) => {
+  try {
+    const runnerId = req.user.id;
+
+    // Ensure the user is actually a runner
+    const user = await User.findByPk(runnerId);
+    if (user.role !== "Runner") {
+      return res.status(403).json({
+        message: "Only runners can access this dashboard"
+      });
+    }
+
+    // Total applications made
+    const totalApplications = await RunnerApplication.count({
+      where: { runnerId }
+    });
+
+    // Accepted jobs
+    const acceptedJobs = await RunnerApplication.count({
+      where: { runnerId, status: "Accepted" }
+    });
+
+    // Active jobs (errand assigned to this runner)
+    const activeJobs = await Errand.count({
+      where: {
+        assignedTo: runnerId,
+        status: ["Assigned", "In-Progress"]
+      }
+    });
+
+    // Completed jobs
+    const completedJobs = await Errand.count({
+      where: {
+        assignedTo: runnerId,
+        status: "Completed"
+      }
+    });
+
+    // Total earnings (optional)
+    const totalEarningsData = await Payment.sum("amount", {
+      where: {
+        receiverId: runnerId,
+        paymentStatus: "Paid"
+      }
+    });
+
+    const totalEarnings = totalEarningsData || 0;
+
+    return res.status(200).json({
+      message: "Runner dashboard summary",
+      data: {
+        totalApplications,
+        acceptedJobs,
+        activeJobs,
+        completedJobs,
+        totalEarnings
+      }
+    });
+
+  } catch (error) {
+    console.error("Dashboard Error →", error);
+    return res.status(500).json({
+      message: "Internal server error",
+      error: error.message
     });
   }
 };

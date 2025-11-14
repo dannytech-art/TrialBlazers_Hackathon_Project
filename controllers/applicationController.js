@@ -218,7 +218,7 @@ exports.acceptRunnerApplication = async (req, res) => {
     const client = await User.findByPk(clientId);
     if (client?.email) {
       // call your sendMail function or Brevo wrapper
-      await sendMail(client.email, 'Errand Accepted', `<p>Your posted errand "${errand.title}" was accepted.</p><p>Start OTP: ${startOTP}</p>`);
+      await sendMail(client.email, 'Errand Accepted', `<p>Your posted errand "${errand.title}" was accepted.</p><p>Start OTP: ${startOTP}</p> and <p>Delivery OTP: ${deliveryOTP}</p>`);
     }
     return res.status(200).json({
       message: 'Runner application accepted successfully',

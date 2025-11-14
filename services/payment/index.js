@@ -1,5 +1,4 @@
 const {
-    initializeClientPayment,
     verifyPayment,
     topUpRunnerWallet,
     getRunnerWalletBalance,
@@ -29,7 +28,6 @@ const {
 } = require('./utils');
 
 module.exports = {
-    initializeClientPayment,
     verifyPayment,
     topUpRunnerWallet,
     getRunnerWalletBalance,
