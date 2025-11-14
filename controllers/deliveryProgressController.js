@@ -59,3 +59,40 @@ exports.updateProgress = async (req, res) => {
     });
   }
 };
+
+
+exports.getErrandProgresSummary = async (req, res) => {
+  try {
+    const { errandId } = req.params;
+
+    const errand = await Errand.findByPk(errandId, {
+      attributes: [
+        "id",
+        "assignedTo",
+        "orderAssignedAt",
+        "headingToPickupAt",
+        "arrivedAtPickupAt",
+        "itemPickedAt",
+        "headingToDeliveryAt",
+        "arrivedAtDeliveryAt",
+        "deliveredConfirmedAt",
+        "status",
+      ],
+    });
+
+    if (!errand) {
+      return res.status(404).json({ message: "Errand not found" });
+    }
+
+    res.status(200).json({
+      message: "Progress summary fetched",
+      data: errand,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: "Failed to fetch progress summary",
+      error: error.message,
+    });
+  }
+};
