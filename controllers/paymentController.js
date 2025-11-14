@@ -1,14 +1,15 @@
-
 const User = require('../models/users');
 const Errands = require('../models/errand');
 const Payment = require('../models/payment');
 const axios = require('axios');
 
-const {getPaymentHistory,getRunnerWalletBalance} = require('../services/payment/core/payments');
+const {getPaymentHistory,getRunnerWalletBalance, verifyPayment, processRunnerWithdrawal} = require('../services/payment/core/payments');
+const { addRunnerBankDetails, getRunnerBankDetails, verifyBankAccount } = require('../services/payment/core/banks');
+const { calculateCommission } = require('../services/payment/utils');
+const{handleWebhook} = require('../services/payment/webhooks/index')
 
 const initializePayment = async (req, res) => {
     try {
-
         const { description } = req.body;
         const bookingId = req.params.bookingId; // fixed typo
 
@@ -220,7 +221,7 @@ const getBanksList = async (req, res) => {
     try {
         const { countryCode = 'NG' } = req.query;
 
-        const result = await getBankList(countryCode);
+        const result = await getBanksList(countryCode);
 
         res.status(200).json({
             success: true,
