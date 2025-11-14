@@ -1,9 +1,10 @@
 const express = require('express');
 const { authenticated } = require('../middleware/authenticate');
-const { sendMessage, getMessages } = require('../controllers/messageController');
+const { sendMessage, getMessages,getMessagesByRoom } = require('../controllers/messageController');
 
 const router = express.Router();
 
+router.get("/messages/history/:roomId", getMessagesByRoom);
 /**
  * @swagger
  * /api/v1/messages/{errandId}:
