@@ -1,7 +1,8 @@
 const { Op } = require("sequelize");
 const Errand = require("../models/errand");
 const User = require("../models/users");
-
+const Payment = require("../models/payment");
+const RunnerApplication = require("../models/runnerapplication");
 
 exports.getClientDashboard = async (req, res) => {
   try {
