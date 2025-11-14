@@ -1,6 +1,6 @@
 const express = require("express");
 const { authenticated } = require("../middleware/authenticate");
-const { updateProgress } = require("../controllers/deliveryProgressController");
+const { updateProgress, getErrandProgresSummary } = require("../controllers/deliveryProgressController");
 
 const router = express.Router();
 
@@ -10,16 +10,14 @@ const router = express.Router();
  *   put:
  *     summary: Update errand delivery progress
  *     tags: [Errands]
- *     description: 
- *       Allows an assigned runner to update the current delivery progress of an errand.
- *       Each step (e.g., headingToPickup, arrivedAtPickup) records a timestamp when completed.
+ *     description: Update the current delivery progress for an errand. Each step records a timestamp.
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: errandId
  *         required: true
- *         description: UUID of the errand to update
+ *         description: UUID of the errand
  *         schema:
  *           type: string
  *           format: uuid
@@ -53,12 +51,15 @@ const router = express.Router();
  *               timestamp: "2025-11-11T12:25:43.000Z"
  *               data:
  *                 id: "36a545af-1c2b-43f2-bd9b-b5a87cc118e4"
- *                 title: "Deliver package to Lekki"
- *                 status: "Assigned"
  *                 assignedTo: "d93dcd35-3a91-44a1-82a3-9e8f5321188c"
- *                 pickupAddress: "123 Allen Avenue, Ikeja"
- *                 deliveryAddress: "Lekki Phase 1, Lagos"
- *                 headingToPickupAt: "2025-11-11T12:25:43.000Z"
+ *                 orderAssignedAt: null
+ *                 headingToPickupAt: "2025-11-11T12:20:10.000Z"
+ *                 arrivedAtPickupAt: "2025-11-11T12:25:43.000Z"
+ *                 itemPickedAt: null
+ *                 headingToDeliveryAt: null
+ *                 arrivedAtDeliveryAt: null
+ *                 deliveredConfirmedAt: null
+ *                 status: "Assigned"
  *       400:
  *         description: Invalid or duplicate step update
  *         content:
@@ -72,7 +73,7 @@ const router = express.Router();
  *             example:
  *               message: "Unauthorized"
  *       403:
- *         description: Forbidden (user not assigned to this errand)
+ *         description: Forbidden
  *         content:
  *           application/json:
  *             example:
@@ -84,14 +85,72 @@ const router = express.Router();
  *             example:
  *               message: "Errand not found"
  *       500:
- *         description: Internal server error
+ *         description: Server error
  *         content:
  *           application/json:
  *             example:
  *               message: "Failed to update progress"
  *               error: "Error message details"
  */
-
 router.put("/:errandId/progress", authenticated, updateProgress);
+
+/**
+ * @swagger
+ * /api/v1/errands/{errandId}/status:
+ *   get:
+ *     summary: Get errand delivery progress status
+ *     tags: [Errands]
+ *     description: Fetches the current delivery progress status for an errand.  
+ *                  Returns only id, assignedTo, and all progress timestamps.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: errandId
+ *         required: true
+ *         description: UUID of the errand
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: Progress status fetched successfully
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: "Progress status found"
+ *               data:
+ *                 id: "36a545af-1c2b-43f2-bd9b-b5a87cc118e4"
+ *                 assignedTo: "d93dcd35-3a91-44a1-82a3-9e8f5321188c"
+ *                 orderAssignedAt: "2025-11-11T12:05:22.000Z"
+ *                 headingToPickupAt: "2025-11-11T12:10:11.000Z"
+ *                 arrivedAtPickupAt: "2025-11-11T12:25:43.000Z"
+ *                 itemPickedAt: null
+ *                 headingToDeliveryAt: null
+ *                 arrivedAtDeliveryAt: null
+ *                 deliveredConfirmedAt: null
+ *                 status: "Assigned"
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: "Unauthorized"
+ *       404:
+ *         description: Errand not found
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: "Errand not found"
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: "Failed to fetch status"
+ *               error: "Error message details"
+ */
+
+router.get("/:errandId/status", authenticated, getErrandProgresSummary)
 
 module.exports = router;
