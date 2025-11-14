@@ -25,10 +25,13 @@ const deliveryProgressRouter = require('./routes/deliveryProgressRouter');
 const dashboardRouter = require('./routes/dashboardRouter');
 
 
+
+const { initializeIO } = require('./controllers/messageController');
+
 const app = express();
 const server = http.createServer(app);
 
-// ---- SOCKET.IO SETUP ----
+// ✅ Create IO instance first
 const io = new Server(server, {
   cors: {
     origin: "*",
@@ -36,30 +39,32 @@ const io = new Server(server, {
   },
 });
 
+// ✅ Now initialize IO globally for the controller
+initializeIO(io);
+console.log("✅ initializeIO called in server.js");
+
+
 // Import modular Socket.IO logic
-const { initializeIO } = require('./controllers/messageController');
-
-
 io.on("connection", (socket) => {
-  console.log(`Use connected: ${socket.id}`);
+  console.log("User connected:", socket.id);
 
-  // Join chat room (client ↔ runner)
-  socket.on("join_room", ({ senderId, receiverId }) => {
-    const roomId = [senderId, receiverId].sort().join("_");
+  // ⭐ Join room (correct way)
+  socket.on("join_room", (roomId) => {
     socket.join(roomId);
-    console.log(" User joined room: ${roomId}");
+    console.log("Joined room:", roomId);
   });
 
-  // Receive message from one side and broadcast to room
+  // ⭐ Receive live messages
   socket.on("send_message", (data) => {
-    const roomId = [data.senderId, data.receiverId].sort().join("_");
-    io.to(roomId).emit("receive_message", data);
-    console.log(` Message broadcast to room: ${roomId}, data.text`);
+    io.to(data.roomId).emit("receive_message", data);
+    console.log("Live message broadcast:", data.roomId);
   });
+
   socket.on("disconnect", () => {
-    console.log(` User disconnected: ${socket.id}`);
+    console.log("User disconnected:", socket.id);
   });
 });
+
 // ---- MIDDLEWARES ----\
 app.use(express.json());
 app.use(cors({ origin: '*' }));
@@ -82,6 +87,7 @@ app.use('/api/v1/messages', messageRouter);
 app.use('/api/v1', applicationRouter);
 app.use('/api/v1', adminRouter);
 app.use('/api/v1', processMondayPayments);
+
 app.use('/api/v1',refundPayment);
 app.use('/api/v1/errands', deliveryProgressRouter);
 app.use('/api/v1', dashboardRouter);
@@ -124,7 +130,7 @@ const swaggerDefinition = {
         type: 'http',
         scheme: 'bearer',
         bearerFormat: 'JWT',
-        description: 'Enter JWT as **Bearer <token>**',
+        description: 'Enter JWT as *Bearer <token>*',
       },
     },
   },
