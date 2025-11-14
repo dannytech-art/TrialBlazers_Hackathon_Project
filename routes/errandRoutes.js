@@ -369,7 +369,90 @@ router.delete('/errand/delete/:id', deleteErrand);
  */
 router.get('/errand/my-errands', authenticated, getErrandByClientId);
 
-router.get('/errand/runner-errands', authenticated, getErrandByClientId);
+
+/**
+ * @swagger
+ * /api/v1/errand/runner-errands:
+ *   get:
+ *     summary: Get all errands created by the authenticated client
+ *     description: Retrieves all errands associated with the currently authenticated user's ID (extracted from the JWT token).
+ *     tags: [Errands]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved user's errands
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Errands retrieved successfully
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                         example: 1
+ *                       title:
+ *                         type: string
+ *                         example: Deliver package
+ *                       description:
+ *                         type: string
+ *                         example: Deliver package to client in Lagos
+ *                       status:
+ *                         type: string
+ *                         example: pending
+ *                       createdAt:
+ *                         type: string
+ *                         format: date-time
+ *                       updatedAt:
+ *                         type: string
+ *                         format: date-time
+ *                       user:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: integer
+ *                             example: 5
+ *                           firstName:
+ *                             type: string
+ *                             example: Daniel
+ *                           lastName:
+ *                             type: string
+ *                             example: Johnson
+ *                           email:
+ *                             type: string
+ *                             example: daniel@example.com
+ *       401:
+ *         description: Unauthorized - Token missing or invalid
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Unauthorized - Invalid or missing token
+ *       500:
+ *         description: Internal server error while fetching errands
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Internal server error while fetching errand
+ *                 error:
+ *                   type: string
+ *                   example: Database connection failed
+ */
+router.get('/errand/runner-errands', authenticated, getErrandByRunnerId);
 
 /**
  * @swagger
