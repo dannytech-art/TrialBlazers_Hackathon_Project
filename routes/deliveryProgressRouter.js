@@ -3,6 +3,12 @@ const { authenticated } = require("../middleware/authenticate");
 const { updateProgress, getErrandProgresSummary } = require("../controllers/deliveryProgressController");
 
 const router = express.Router();
+/**
+ * @swagger
+ * tags:
+ *   name: Errands
+ *   description: Delivery progress tracking for errands
+ */
 
 /**
  * @swagger
@@ -10,7 +16,10 @@ const router = express.Router();
  *   put:
  *     summary: Update errand delivery progress
  *     tags: [Errands]
- *     description: Update the current delivery progress for an errand. Each step records a timestamp.
+ *     description: |
+ *       Updates the current delivery progress for an errand.  
+ *       Each progress step is recorded with its own timestamp.  
+ *       Steps must be updated in sequential order — once a step is completed, it cannot be updated again.
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -32,6 +41,7 @@ const router = express.Router();
  *             properties:
  *               step:
  *                 type: string
+ *                 description: The progress step to update
  *                 enum:
  *                   - orderAssigned
  *                   - headingToPickup
@@ -65,7 +75,7 @@ const router = express.Router();
  *         content:
  *           application/json:
  *             example:
- *               message: "This step is already completed"
+ *               message: "This step is already completed or invalid"
  *       401:
  *         description: Unauthorized
  *         content:
@@ -73,7 +83,7 @@ const router = express.Router();
  *             example:
  *               message: "Unauthorized"
  *       403:
- *         description: Forbidden
+ *         description: Forbidden — user is not assigned to the errand
  *         content:
  *           application/json:
  *             example:
@@ -92,16 +102,19 @@ const router = express.Router();
  *               message: "Failed to update progress"
  *               error: "Error message details"
  */
+
 router.put("/:errandId/progress", authenticated, updateProgress);
+
 
 /**
  * @swagger
  * /api/v1/errands/{errandId}/status:
  *   get:
- *     summary: Get errand delivery progress status
+ *     summary: Get current delivery progress status
  *     tags: [Errands]
- *     description: Fetches the current delivery progress status for an errand.  
- *                  Returns only id, assignedTo, and all progress timestamps.
+ *     description: |
+ *       Returns the current progress timestamps for the errand  
+ *       including: id, assignedTo, and every progress step timestamp.
  *     security:
  *       - bearerAuth: []
  *     parameters:

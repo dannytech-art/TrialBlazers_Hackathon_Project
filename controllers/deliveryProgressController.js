@@ -37,6 +37,8 @@ exports.updateProgress = async (req, res) => {
 
     const finalStep = matchedStep || altMatch;
 
+    console.log("Final Step Matched:", finalStep);
+
     if (!finalStep) {
       return res.status(400).json({ message: "Invalid step" });
     }
