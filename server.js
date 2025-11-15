@@ -54,11 +54,6 @@ io.on("connection", (socket) => {
     console.log("Joined room:", roomId);
   });
 
-  // ⭐ Receive live messages
-  socket.on("send_message", (data) => {
-    io.to(data.roomId).emit("receive_message", data);
-    console.log("Live message broadcast:", data.roomId);
-  });
 
   socket.on("disconnect", () => {
     console.log("User disconnected:", socket.id);
