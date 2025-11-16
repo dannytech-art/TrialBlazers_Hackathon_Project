@@ -4,7 +4,7 @@ const { sendMessage, getMessages,getMessagesByRoom } = require('../controllers/m
 
 const router = express.Router();
 
-router.get("/messages/history/:roomId", getMessagesByRoom);
+// router.get("/messages/history/:roomId", getMessagesByRoom);
 /**
  * @swagger
  * /api/v1/messages/{errandId}:
