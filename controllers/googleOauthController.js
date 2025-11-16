@@ -22,7 +22,7 @@ passport.use(
           : {};
 
         const { role } = state;
-        let token;
+        let token; 
         let userData;
 
         // ✅ Find user in database

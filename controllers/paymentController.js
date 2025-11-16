@@ -2,7 +2,7 @@ const User = require('../models/users');
 const Errands = require('../models/errand');
 const Payment = require('../models/payment');
 const axios = require('axios');
-
+const Wallet = require("../models/wallet");
 const {getPaymentHistory,getRunnerWalletBalance, verifyPayment, processRunnerWithdrawal} = require('../services/payment/core/payments');
 const { addRunnerBankDetails, getRunnerBankDetails, verifyBankAccount } = require('../services/payment/core/banks');
 const { calculateCommission } = require('../services/payment/utils');
@@ -127,7 +127,7 @@ const verifyPaymentStatus = async (req, res, next) => {
 
     // Update errand paymentStatus
     await errand.update({ paymentStatus: "Paid" });
-console.log("i am idd  ",errand)
+
     // Save payment record
     const payment = await Payment.create({
         
@@ -181,34 +181,68 @@ const getWalletBalance = async (req, res) => {
     }
 };
 
+
+
 const withdrawFunds = async (req, res) => {
-    try {
-        const { amount, bankDetailsId, narration } = req.body;
-        const runnerId =  req.user?.id || req.query.runnerId;
+  try {
+    const { amount } = req.body;
+    const runnerId = req.user?.id || req.query.runnerId;
 
-        const withdrawalData = {
-            runnerId,
-            amount,
-            bankDetailsId,
-            narration
-        };
-
-        const result = await processRunnerWithdrawal(withdrawalData);
-
-        res.status(200).json({
-            success: true,
-            message: 'Withdrawal processed successfully',
-            data: result
-        });
-
-    } catch (error) {
-        console.error('Error processing withdrawal:', error);
-        res.status(400).json({
-            success: false,
-            message: error.message
-        });
+    if (!amount || Number(amount) < 1000) {
+      return res.status(400).json({
+        success: false,
+        message: "Minimum withdrawal is ₦1,000"
+      });
     }
+
+ 
+    const wallet = await Wallet.findOne({ where: { runnerId } });
+
+    if (!wallet) {
+      return res.status(404).json({
+        success: false,
+        message: "Wallet not found"
+      });
+    }
+
+    const currentBalance =  Number(wallet.balance);
+
+
+    if (currentBalance < Number(amount)) {
+      return res.status(400).json({
+        success: false,
+        message: "Insufficient wallet balance"
+      })
+    }
+
+    // 3. Deduct from wallet
+    const newBalance = currentBalance - Number(amount);
+
+    await wallet.update({
+      balance: newBalance,
+      lastTransactionAt: new Date()
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Withdrawal processed successfully",
+      data: {
+        runnerId,
+        amount: Number(amount),
+        newBalance
+      }
+    }); 
+
+  } catch (error) {
+    console.error("Error processing withdrawal:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error"
+    });
+  }
 };
+
 
 const getPaymentHistoryByUser = async (req, res) => {
     try {
