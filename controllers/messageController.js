@@ -97,3 +97,24 @@ exports.sendMessage = async (req, res) => {
     });
   }
 };
+exports.getMessagesByRoom = async (req, res) => {
+  try {
+    const { roomId } = req.params;
+
+    const messages = await Message.findAll({
+      where: { roomId },
+      include: [
+        { model: User, as: "sender", attributes: ["id", "firstName", "lastName", "profileImage", "role"] },
+        { model: User, as: "receiver", attributes: ["id", "firstName", "lastName", "profileImage", "role"] },
+      ],
+      order: [["createdAt", "ASC"]],
+    });
+
+    res.json({
+      message: `Found ${messages.length} messages`,
+      data: messages,
+    });
+  } catch (err) {
+    res.status(500).json({ message:  `Failed to fetch messages", error: err.message `});
+  }
+};
