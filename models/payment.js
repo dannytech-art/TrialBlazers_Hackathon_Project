@@ -1,5 +1,6 @@
 const { Sequelize, DataTypes, Model } = require('sequelize');
-const sequelize = require('../database/databases')
+const sequelize = require('../database/databases');
+
 
 class Payment extends Model {}
 
@@ -56,6 +57,12 @@ Payment.init(
     modelName: 'Payments', 
     timestamps: true
   },
+
+
+
+
+
+
 );
 
 module.exports = Payment;

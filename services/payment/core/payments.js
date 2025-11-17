@@ -2,11 +2,14 @@ const axios = require('axios');
 const Payment = require('../../../models/payment');
 const User = require('../../../models/users');
 const Wallet = require('../../../models/wallet');
+const runnerapplication = require('../../../models/runnerapplication');
+const Errand = require('../../../models/errand')
 const WalletTransaction = require('../../../models/wallettransaction');
 const RunnerBankDetails = require('../../../models/runnerbankdetails');
 const config = require('../config');
 const { validatePaymentData, validateWithdrawalData, validateBankDetailsData, validateAccountData } = require('../validation');
 const { calculateCommission, determinePaymentType, determinePaymentDirection, getCounterparty, calculateWalletImpact } = require('../utils');
+const { application } = require('express');
 
 const verifyPayment = async (reference) => {
     try {
@@ -449,6 +452,9 @@ const getPaymentHistory = async (userId, userType, filters = {}) => {
                 }
             ]
         });
+        const finaPrice = application.bidPrice??
+        application.currentPrice ??
+        Errand.price;
         
         const formattedPayments = payments.map(payment => {
             const paymentData = {

@@ -33,6 +33,8 @@ const RunnerApplication = require('./runnerapplication');
 const Notification = require('./notification');
 
 
+
+
 // Register models
 db.Admin = Admin;
 db.User = User;
@@ -63,6 +65,7 @@ db.RunnerApplication.belongsTo(db.User, { foreignKey: 'runnerId', as: 'runner' }
 db.Errand.hasMany(db.RunnerApplication, { foreignKey: 'errandId', as: 'applications' });
 db.RunnerApplication.belongsTo(db.Errand, { foreignKey: 'errandId', as: 'errand' });
 
+
 // ---------- REVIEWS ----------
 db.User.hasMany(db.Review, { foreignKey: 'reviewerId', as: 'reviewsGiven' });
 db.Review.belongsTo(db.User, { foreignKey: 'reviewerId', as: 'reviewer' });
@@ -89,6 +92,10 @@ db.Payment.belongsTo(db.User, { foreignKey: 'payerId', as: 'payer' });
 db.Payment.belongsTo(db.User, { foreignKey: 'receiverId', as: 'receiver' });
 db.User.hasMany(db.Payment, { foreignKey: 'payerId', as: 'paymentsMade' });
 db.User.hasMany(db.Payment, { foreignKey: 'receiverId', as: 'paymentsReceived' });
+db.RunnerApplication.hasMany(db.Payment, {foreignKey: 'runnerApplicationId', as: 'payments'});
+db.Errand.hasMany(db.Payment, {foreignKey: 'errandId', as: 'payments'});
+
+
 
 // ---------- RUNNER BANK DETAILS ----------
 db.User.hasOne(db.RunnerBankDetails, { foreignKey: 'runnerId', as: 'bankDetails' });
@@ -97,6 +104,9 @@ db.RunnerBankDetails.belongsTo(db.User, { foreignKey: 'runnerId', as: 'runner' }
 // ---------- ERRAND - PAYMENT (optional, if tied to an errand) ----------
 db.Errand.hasOne(db.Payment, { foreignKey: 'errandId', as: 'payment' });
 db.Payment.belongsTo(db.Errand, { foreignKey: 'errandId', as: 'errand' });
+db.Payment.belongsTo(db.RunnerApplication, {foreignKey: 'runnerApplicationId', as: 'runnerApplication'});
+
+
 
 // ---------- MESSAGES ----------
 db.User.hasMany(db.Message, { foreignKey: 'senderId', as: 'sentMessages' });
