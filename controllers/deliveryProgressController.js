@@ -1,4 +1,6 @@
 const Errand = require("../models/errand");
+const Payment = require("../models/payment");   // <-- added
+const { topUpRunnerWallet } = require("../services/payment/core/payments"); // <-- added
 
 exports.updateProgress = async (req, res) => {
   try {
@@ -63,10 +65,40 @@ exports.updateProgress = async (req, res) => {
     // Update this step timestamp
     await errand.update({ [finalStep.key]: new Date() });
 
-    // Auto complete errand when last step done
-    if (finalStep.key === "deliveredConfirmedAt") {
-      await errand.update({ status: "Completed" });
+    // Auto complete errand when last step done + CREDIT WALLET
+if (finalStep.key === "deliveredConfirmedAt") {
+    await errand.update({ status: "Completed" });
+
+    try {
+        // Find any payment linked to this errand that is PAID
+        const payment = await Payment.findOne({
+            where: {
+                errandId: errand.id,
+                paymentStatus: "Paid" // must match enum exactly: 'Paid'
+            }
+        });
+
+        if (!payment) {
+            console.warn("No paid payment found for this errand, skipping wallet top-up");
+        } else {
+            console.log(`Crediting runner wallet for payment ID: ${payment.id}, receiver: ${payment.receiverId}, amount: ${payment.amount}`);
+            
+            // Pass only the fields topUpRunnerWallet expects
+            await topUpRunnerWallet({
+                id: payment.id,
+                receiverId: payment.receiverId,
+                payerId: payment.payerId,
+                amount: payment.amount,
+                description: payment.description,
+                paymentMethod: payment.paymentMethod || 'KoraPay'
+            });
+
+            console.log("Runner wallet top-up successful");
+        }
+    } catch (err) {
+        console.error("Error during runner wallet top-up:", err);
     }
+}
 
     return res.status(200).json({
       message: `${finalStep.label} completed successfully`,
@@ -81,7 +113,6 @@ exports.updateProgress = async (req, res) => {
     });
   }
 };
-
 
 
 exports.getErrandProgresSummary = async (req, res) => {
