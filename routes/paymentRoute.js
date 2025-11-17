@@ -419,7 +419,7 @@ router.get('/wallet/balance', authenticated,getWalletBalance);
  *       401:
  *         description: Unauthorized - Invalid or missing token
  */
-router.post('/wallet/withdraw', withdrawFunds);
+router.post('/wallet/withdraw', authenticated,withdrawFunds);
 
 /**
  * @swagger
