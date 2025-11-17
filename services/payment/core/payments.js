@@ -449,6 +449,7 @@ const getPaymentHistory = async (userId, userType, filters = {}) => {
                 }
             ]
         });
+
         
         const formattedPayments = payments.map(payment => {
             const paymentData = {

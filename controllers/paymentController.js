@@ -6,7 +6,8 @@ const Wallet = require("../models/wallet");
 const {getPaymentHistory,getRunnerWalletBalance, verifyPayment, processRunnerWithdrawal} = require('../services/payment/core/payments');
 const { addRunnerBankDetails, getRunnerBankDetails, verifyBankAccount } = require('../services/payment/core/banks');
 const { calculateCommission } = require('../services/payment/utils');
-const{handleWebhook} = require('../services/payment/webhooks/index')
+const{handleWebhook} = require('../services/payment/webhooks/index');
+const RunnerApplication = require('../models/runnerapplication');
 
 const initializePayment = async (req, res) => {
     try {
@@ -14,6 +15,7 @@ const initializePayment = async (req, res) => {
         const bookingId = req.params.bookingId; // fixed typo
 
         const findBooking = await Errands.findByPk(bookingId);
+        const application = await RunnerApplication.findOne({where: {errandId: bookingId}})
 
         if (!findBooking) {
             return res.status(404).json({
@@ -22,11 +24,13 @@ const initializePayment = async (req, res) => {
             });
         }
 
+         const finalPrice = application.bidPrice ?? application.currentPrice ?? findBooking.price;
+
         // create payment record
         const payment = await Payment.create({
             payerId: findBooking.userId,
             receiverId:findBooking.assignedTo,
-            amount: findBooking.price,
+            amount: finalPrice,
             description,
             status: 'Pending'
         });
