@@ -8,48 +8,87 @@ exports.applyForErrand = async (req, res) => {
     const { bidPrice } = req.body;
     const { errandId } = req.params; 
     const runnerId = req.user.id; 
-    // Check if the User is a Client or Runner before applying for errands
-    const user = await User.findByPk(runnerId)
-    if (user.role !== 'Runner'){
-      return res.status(400).json({ message: `Sorry ${user.firstName}, only Runners can apply for errands!`})
+
+    // Validate Runner Role
+    const user = await User.findByPk(runnerId);
+    if (user.role !== 'Runner') {
+      return res.status(400).json({ message: `Sorry ${user.firstName}, only Runners can apply for errands!` });
     }
 
-    const runnerKYC = await KYC.findOne({where: {userId: runnerId}});
-    if (!runnerKYC || runnerKYC.status !== 'verified'){
-      return res.status(400).json({ message: 'Complete your KYC verification to apply for errands!'})
+    // Check KYC
+    const runnerKYC = await KYC.findOne({ where: { userId: runnerId } });
+    if (!runnerKYC || runnerKYC.status !== 'verified') {
+      return res.status(400).json({ message: 'Complete your KYC verification to apply for errands!' });
     }
 
-    // Check if errand exists
+    // Check Errand Exists
     const errand = await Errand.findByPk(errandId);
-    if (!errand) {
-      return res.status(404).json({ message: 'Errand not found' });
-    }
-     const userExists = await User.findByPk(runnerId);
-    if (!userExists) return res.status(400).json({ message: 'Runner does not exist' });
+    if (!errand) return res.status(404).json({ message: 'Errand not found' });
 
-    // Prevent duplicate application
+    // Prevent Duplicate Application
     const existingApp = await RunnerApplication.findOne({ where: { runnerId, errandId } });
     if (existingApp) {
       return res.status(400).json({ message: 'You have already applied for this errand' });
     }
 
-    if (!bidPrice){
-      const acceptedPrice = await RunnerApplication.create({
-      runnerId,
-      errandId,
-      currentPrice: errand.price ?? 0,
-      status: 'Pending',
-      })
-      return res.status(200).json({message: 'Current price accepted for errand', data: acceptedPrice})
+    const clientId = errand.userId; 
+
+    let application;
+
+    // Runner accepted listed price
+    if (!bidPrice) {
+      application = await RunnerApplication.create({
+        runnerId,
+        errandId,
+        currentPrice: errand.price ?? 0,
+        status: 'Pending',
+      });
+
+      // Notify Client
+      await Notification.create({
+        userId: clientId,
+        type: 'runner_applied',
+        message: `${user.firstName} applied for your errand "${errand.title}".`,
+        meta: {
+          errandId,
+          applicationId: application.id,
+          runnerId
+        }
+      });
+
+      return res.status(200).json({
+        message: 'Current price accepted for errand',
+        data: application
+      });
+
     } else {
-     const proposedPrice = await RunnerApplication.create({
-      runnerId,
-      errandId,
-      bidPrice,
-      status: 'Pending',
-    });
-    return res.status(200).json({message: 'Proposed price for errand', data: proposedPrice})
+      // Runner proposed custom price
+      application = await RunnerApplication.create({
+        runnerId,
+        errandId,
+        bidPrice,
+        status: 'Pending',
+      });
+
+      // Notify Client
+      await Notification.create({
+        userId: clientId,
+        type: 'runner_applied',
+        message: `${user.firstName} proposed a bid for your errand "${errand.title}".`,
+        meta: {
+          errandId,
+          applicationId: application.id,
+          runnerId,
+          proposedAmount: bidPrice
+        }
+      });
+
+      return res.status(200).json({
+        message: 'Proposed price submitted for errand',
+        data: application
+      });
     }
+
   } catch (error) {
     console.error('Error in applyForErrand:', error);
     res.status(500).json({ message: 'Internal Server Error', error: error.message });
@@ -236,6 +275,7 @@ exports.acceptRunnerApplication = async (req, res) => {
 exports.getNotifications = async (req, res) => {
   try {
     const userId = req.user.id;
+
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 20;
     const offset = (page - 1) * limit;
@@ -243,29 +283,64 @@ exports.getNotifications = async (req, res) => {
     const { count, rows } = await Notification.findAndCountAll({
       where: { userId },
       order: [['createdAt', 'DESC']],
-      limit, offset
+      limit,
+      offset
     });
-    res.status(200).json({ 
+
+    return res.status(200).json({
+      success: true,
       total: count,
-      page,
-      perPage: limit,
-      data: rows
+      currentPage: page,
+      totalPages: Math.ceil(count / limit),
+      notifications: rows,
     });
+
   } catch (error) {
-    res.status(500).json({ message: 'Internal Server Error', error: error.message });
+    console.error("Error fetching notifications:", error);
+    res.status(500).json({ error: error.message });
   }
 };
 
-exports.markAsRead = async (req, res) => {
+exports.markNotificationAsRead = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { notificationId } = req.params;
     const userId = req.user.id;
-    const notif = await Notification.findOne({ where: { id, userId } });
-    if (!notif) return res.status(404).json({ message: 'Notification not found' });
-    await notif.update({ isRead: true });
-    res.status(200).json({ message: 'Marked as read' });
+
+    const notification = await Notification.findOne({
+      where: { id: notificationId, userId }
+    });
+
+    if (!notification) {
+      return res.status(404).json({ message: "Notification not found" });
+    }
+
+    await notification.update({ isRead: true });
+
+    return res.status(200).json({
+      message: "Notification marked as read",
+      notification
+    });
+
   } catch (error) {
-    res.status(500).json({ message: 'Internal Server Error', error: err.message });
+    console.error("Error marking notification:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.markAllAsRead = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    await Notification.update(
+      { isRead: true },
+      { where: { userId, isRead: false } }
+    );
+
+    return res.status(200).json({ message: "All notifications marked as read" });
+
+  } catch (error) {
+    console.error("Error marking all notifications:", error);
+    res.status(500).json({ error: error.message });
   }
 };
 
