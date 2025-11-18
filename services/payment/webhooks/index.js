@@ -137,7 +137,7 @@ const handleChargeSuccess = async (payment, data) => {
         { where: { id: payment.id } }
     );
     
-    const topUpResult = await topUpRunnerWallet(payment);
+    await confirmPayment(payment.id);
     
     await sendPaymentNotifications(payment, 'Paid', data);
     

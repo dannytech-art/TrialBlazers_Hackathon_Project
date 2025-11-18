@@ -2,7 +2,7 @@ const cloudinary = require('../config/cloudinary');
 const fs = require('fs');
 const db = require('../models');
 const RunnerApplication = require('../models/runnerapplication');
-const {Errand, User, KYC} = db
+const {Errand, User, KYC, Wallet} = db
 
 exports.createErrand = async (req, res) => {
   try {
@@ -76,8 +76,17 @@ exports.createErrand = async (req, res) => {
 exports.getAllErrands = async (req, res) => {
   try {
     const errands = await Errand.findAll({
-      include: [{ model: User, as: 'poster', attributes: ['id', 'firstName', 'lastName', 'email'] }],
-      order: [['createdAt', 'DESC']],
+      attributes: {
+        exclude: ['startOTP', 'deliveryOTP', 'startOTPExpires', 'deliveryOTPExpires']
+      },
+      include: [
+        {
+          model: User,
+          as: 'poster',
+          attributes: ['id', 'firstName', 'lastName', 'email'] 
+        }
+      ],
+      order: [['createdAt', 'DESC']]
     });
 
     res.status(200).json({
@@ -92,6 +101,8 @@ exports.getAllErrands = async (req, res) => {
     });
   }
 };
+
+
 
 exports.getErrandById = async (req, res) => {
   try {
@@ -133,6 +144,8 @@ exports.getErrandByClientId = async (req, res) => {
     const userFromToken = req.user;
     const errands = await Errand.findAll({
       where: { userId: userFromToken.id },
+      attributes: {
+      exclude: ['startOTP', 'deliveryOTP', 'startOTPExpires', 'deliveryOTPExpires'] },
       include: [{ model: User, as: 'assignedRunner', attributes: ['id', 'firstName', 'lastName', 'email'] }],
       order: [['createdAt', 'DESC']],
     });
@@ -154,6 +167,8 @@ exports.getErrandByRunnerId = async (req, res) => {
     const userFromToken = req.user;
     const errands = await Errand.findAll({
       where: { assignedTo: userFromToken.id },
+      attributes: {
+      exclude: ['startOTP', 'deliveryOTP', 'startOTPExpires', 'deliveryOTPExpires'] },
       include: [{ model: User, as: 'poster', attributes: ['id', 'firstName', 'lastName', 'email'] }],
       order: [['createdAt', 'DESC']],
     });
@@ -170,7 +185,6 @@ exports.getErrandByRunnerId = async (req, res) => {
   }
 };
 
-//assignedTo
 exports.updateErrand = async (req, res) => {
   try {
     const user = req.user;
@@ -277,7 +291,7 @@ exports.verifyStartOtp = async (req, res) => {
    }
    await errand.update({startOTP: null});
     return res.status(200).json({
-          message: 'Start OTP verified for Runner',
+          message: 'Start OTP verified',
         })
   } catch (error) {
   res.status(500).json({
@@ -289,26 +303,50 @@ exports.verifyStartOtp = async (req, res) => {
 
 exports.verifyDeliveryOtp = async (req, res) => {
   try {
-     const {otp} = req.body
-     const{errandId} = req.params
-    const runnerId = req.user.id
-    const errand = await Errand.findByPk(errandId);
-     if (!errand) return res.status(404).json({ message: 'Errand not found' });
+    const { otp } = req.body;
+    const { errandId } = req.params;
+    const runnerId = req.user.id;
 
+    const errand = await Errand.findByPk(errandId);
+    if (!errand) return res.status(404).json({ message: 'Errand not found' });
+
+   
     const application = await RunnerApplication.findOne({ where: { errandId, runnerId } });
     if (!application) return res.status(404).json({ message: 'Application not found' });
-    
+
+
     if (String(otp).trim() !== String(errand.deliveryOTP).trim()) {
       return res.status(400).json({ message: "Invalid OTP" });
-   }
-   await errand.update({deliveryOTP: null});
+    }
+
+
+    await errand.update({ deliveryOTP: null });
+
+
+ const commissionRate = 0.10;
+    const amountToCredit = Number(errand.price) * (1 - commissionRate);
+
+
+    let wallet = await Wallet.findOne({ where: { runnerId } });
+    if (!wallet) {
+      wallet = await Wallet.create({ runnerId, balance: 0 });
+    }
+
+    wallet.balance = Number(wallet.balance) + amountToCredit;
+    wallet.lastTransactionAt = new Date();
+    await wallet.save();
+
     return res.status(200).json({
-          message: 'Delivery OTP verified for Runner',
-        })
+      message: `Delivery OTP verified! `,
+      creditedAmount: amountToCredit,
+      walletBalance: wallet.balance
+    });
+
   } catch (error) {
-  res.status(500).json({
+    console.log(error);
+    res.status(500).json({
       message: 'Internal server error while verifying delivery OTP',
       error: error.message,
     });
-  }  
-}
+  }
+};

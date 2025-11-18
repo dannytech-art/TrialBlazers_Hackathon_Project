@@ -201,8 +201,6 @@ if (!runner) {
 if (runner.role !== 'Runner') {
   throw new Error(`User ${runnerId} is not authorized to access runner wallet`);
 }
-
-        
         let runnerWallet = await Wallet.findOne({
             where: { runnerId: runnerId }
         });

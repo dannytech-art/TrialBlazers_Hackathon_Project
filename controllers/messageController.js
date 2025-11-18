@@ -116,6 +116,7 @@ exports.getMessagesByRoom = async (req, res) => {
       data: messages,
     });
   } catch (err) {
-    res.status(500).json({ message: "Failed to fetch messages", error: err.message });
+    res.status(500).json({ message: "Failed to fetch messages", error: err.message});
   }
 };
+
