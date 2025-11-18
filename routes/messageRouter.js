@@ -112,7 +112,6 @@ router.get("/messages/history/:roomId", getMessagesByRoom);
  */
 router.post('/:errandId', sendMessage);
 
-
 /**
  * @swagger
  * /api/v1/messages/{errandId}:
