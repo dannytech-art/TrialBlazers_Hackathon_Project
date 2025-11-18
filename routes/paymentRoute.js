@@ -12,7 +12,7 @@ const {
     calculateCommissionAmount
 } = require('../controllers/paymentController');
 
-const { authenticated } = require('../middleware/authenticate');
+const { authenticated } = require('../middleware/authenticate')
 
 const router = require('express').Router();
 
@@ -128,67 +128,17 @@ router.get('/commission/calculate', calculateCommissionAmount);
 
 /**
  * @swagger
- * /api/v1/wallet/runner/{runnerId}:
+ * /api/v1/payment/wallet/balance:
  *   get:
- *     summary: Get a runner's wallet balance
- *     description: Retrieves the wallet details and current balance of a runner. If the wallet does not exist, a new wallet is automatically created.
- *     tags:
- *       - Wallet
+ *     summary: Get wallet balance
+ *     tags: [Wallet]
  *     security:
  *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: runnerId
- *         required: true
- *         description: ID of the runner whose wallet balance you want to fetch
- *         schema:
- *           type: string
- *           format: uuid
  *     responses:
  *       200:
- *         description: Wallet details retrieved successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 walletId:
- *                   type: string
- *                   example: "22a8c3d1-bf90-4b59-9ac3-4b902f72c155"
- *                 runnerId:
- *                   type: string
- *                   example: "d89c3ab1-02c3-4122-a9cc-f12b12d67452"
- *                 balance:
- *                   type: number
- *                   example: 15000.50
- *                 currency:
- *                   type: string
- *                   example: "NGN"
- *                 isActive:
- *                   type: boolean
- *                   example: true
- *                 lastTransactionAt:
- *                   type: string
- *                   format: date-time
- *                   example: "2025-01-18T12:45:32.000Z"
- *                 createdAt:
- *                   type: string
- *                   format: date-time
- *                   example: "2025-01-18T10:20:15.000Z"
- *                 updatedAt:
- *                   type: string
- *                   format: date-time
- *                   example: "2025-01-18T12:45:32.000Z"
- *       400:
- *         description: Invalid user or unauthorized access
- *       404:
- *         description: Runner not found
+ *         description: Wallet balance retrieved successfully
  */
-
-router.get('/wallet/runner/:runnerId', authenticated, getWalletBalance);
+router.get('/wallet/balance', authenticated, getWalletBalance);
 
 /**
  * @swagger

@@ -8,9 +8,6 @@ const { addRunnerBankDetails, getRunnerBankDetails, verifyBankAccount } = requir
 const { calculateCommission } = require('../services/payment/utils');
 const{handleWebhook} = require('../services/payment/webhooks/index');
 const RunnerApplication = require('../models/runnerapplication');
-const { creditRunnerWallet } = require('../services/walletService');
-const { Sequelize } = require('sequelize');
-const sequelize = require('../database/databases'); 
 
 const initializePayment = async (req, res) => {
     try {
@@ -27,7 +24,7 @@ const initializePayment = async (req, res) => {
             });
         }
 
-         const finalPrice = application.bidPrice ?? application.currentPrice ?? findBooking.price;
+        const finalPrice = application.bidPrice ?? application.currentPrice ?? findBooking.price;
 
         // create payment record
         const payment = await Payment.create({
@@ -41,6 +38,7 @@ const initializePayment = async (req, res) => {
         const koraPayload = {
    
             reference: `${findBooking.id}_${Math.floor(Math.random()*2300)}`,
+
             amount: finalPrice,
             currency: 'NGN',
             redirect_url: 'https://errand-hive.vercel.app/dashboard/success',
@@ -69,11 +67,13 @@ console.log(koraPayload )
                 paymentStatus: response.data.data.status
             });
         }
+
         res.status(201).json({
             success: true,
             message: 'Payment initialized successfully',
             data: response.data
         });
+
     } catch (error) {
         console.error('Kora Error Response:', error.response?.data);
 
@@ -84,6 +84,7 @@ console.log(koraPayload )
         });
     }
 };
+        
       
 const verifyPaymentStatus = async (req, res, next) => {
   try {
@@ -206,6 +207,7 @@ const withdrawFunds = async (req, res) => {
 
     const currentBalance =  Number(wallet.balance);
 
+
     if (currentBalance < Number(amount)) {
       return res.status(400).json({
         success: false,
@@ -241,7 +243,6 @@ const withdrawFunds = async (req, res) => {
   }
 };
 
-
 const getPaymentHistoryByUser = async (req, res) => {
     try {
 
@@ -257,7 +258,7 @@ if (!user) {
 
 
        const userType = req.user?.role || 'user';
-
+    
         const { 
             dateFrom, 
             dateTo, 
@@ -282,6 +283,7 @@ if (!user) {
             message: 'Payment history retrieved successfully',
             data: result
         });
+        //
 
     } catch (error) {
         console.error('Error getting payment history:', error);
@@ -420,6 +422,7 @@ const calculateCommissionAmount = async (req, res) => {
         }
 
         const result = calculateCommission(amount);
+
         res.status(200).json({
             success: true,
             message: 'Commission calculated successfully',
@@ -433,37 +436,6 @@ const calculateCommissionAmount = async (req, res) => {
             message: error.message
         });
     }
-};
-
-exports.confirmPayment = async (req, res) => {
-  try {
-    const { transactionId } = req.body;
-
-    await sequelize.transaction(async (t) => {
-      const payment = await Payment.findOne({
-        where: { transactionId },
-        transaction: t,
-        lock: t.LOCK.UPDATE
-      });
-
-      if (!payment) throw new Error('Payment not found');
-
-      // Already processed?
-      if (payment.paymentStatus === 'Paid') return;
-
-      // Mark payment as Paid
-      await payment.update({ paymentStatus: 'Paid' }, { transaction: t });
-
-      // 🔥 CREDIT RUNNER WALLET 🔥
-      await creditRunnerWallet(payment, t);
-    });
-
-    res.status(200).json({ message: "Payment confirmed & wallet credited" });
-
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: err.message });
-  }
 };
 
 module.exports = {
