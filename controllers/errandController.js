@@ -252,7 +252,6 @@ exports.updateErrand = async (req, res) => {
   }
 };
 
-
 exports.deleteErrand = async (req, res) => {
   try {
     const { id } = req.params;
@@ -319,13 +318,10 @@ exports.verifyDeliveryOtp = async (req, res) => {
       return res.status(400).json({ message: "Invalid OTP" });
     }
 
+    await errand.update({deliveryOTP: null, status :"Completed"});
 
-    await errand.update({ deliveryOTP: null });
-
-
- const commissionRate = 0.10;
+    const commissionRate = 0.10;
     const amountToCredit = Number(errand.price) * (1 - commissionRate);
-
 
     let wallet = await Wallet.findOne({ where: { runnerId } });
     if (!wallet) {
