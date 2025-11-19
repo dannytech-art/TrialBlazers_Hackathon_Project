@@ -402,6 +402,7 @@ exports.rejectRunnerApplication = async (req, res) => {
     // 🔔 Send rejection notification to runner
     await Notification.create({
       userId: application.runnerId,
+      type: 'application_rejected',
       title: "Application Rejected",
       message: `Your application for the errand "${errand.title}" was rejected by the client.`,
       isRead: false,
