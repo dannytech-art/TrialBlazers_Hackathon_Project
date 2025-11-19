@@ -322,10 +322,13 @@ exports.verifyDeliveryOtp = async (req, res) => {
 
     const commissionRate = 0.10;
     const amountToCredit = Number(errand.price) * (1 - commissionRate);
-
+       console.log(`Crediting amount: ${amountToCredit} to runner ID`);
     let wallet = await Wallet.findOne({ where: { runnerId } });
+    console.log(`i am wallet: ${wallet}`);
+    
     if (!wallet) {
       wallet = await Wallet.create({ runnerId, balance: 0 });
+      console.log(`Created new wallet for runner ID: ${wallet}`);
     }
 
     wallet.balance = Number(wallet.balance) + amountToCredit;
@@ -333,7 +336,7 @@ exports.verifyDeliveryOtp = async (req, res) => {
     await wallet.save();
 
     return res.status(200).json({
-      message: `Delivery OTP verified! `,
+      message: `Delivery OTP verified! crediting NGN ${amountToCredit} to your wallet.`,
       creditedAmount: amountToCredit,
       walletBalance: wallet.balance
     });
