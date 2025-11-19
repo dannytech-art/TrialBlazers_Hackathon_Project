@@ -103,22 +103,21 @@ exports.getAllErrands = async (req, res) => {
 };
 
 
-
 exports.getErrandById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const foundErrand = await Errand.findByPk(id, {
+    let foundErrand = await Errand.findByPk(id, {
       include: [
         {
           model: User,
           as: 'poster',
-          attributes: ['id', 'firstName', 'lastName', 'email', 'bio', 'rating', 'totalJobs'] // poster info
+          attributes: ['id', 'firstName', 'lastName', 'email', 'bio', 'rating', 'totalJobs']
         },
         {
           model: User,
           as: 'assignedRunner',
-          attributes: ['id', 'firstName', 'lastName', 'email', 'bio', 'rating', 'totalJobs'] // runner info
+          attributes: ['id', 'firstName', 'lastName', 'email', 'bio', 'rating', 'totalJobs']
         }
       ]
     });
@@ -127,12 +126,15 @@ exports.getErrandById = async (req, res) => {
       return res.status(404).json({ message: 'Errand not found' });
     }
 
-    res.status(200).json({
+    // Convert to plain object so we can add fields cleanly
+   
+    return res.status(200).json({
       message: 'Errand retrieved successfully',
       data: foundErrand
     });
+
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       message: 'Internal server error while getting errand by ID',
       error: error.message
     });

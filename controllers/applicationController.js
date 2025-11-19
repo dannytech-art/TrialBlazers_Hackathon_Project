@@ -228,6 +228,7 @@ exports.getErrandApplicationsForArunner = async (req, res) => {
 exports.acceptRunnerApplication = async (req, res) => {
   try {
     const { errandId, applicationId } = req.params;
+    console.log(req.user)
     const clientId = req.user.id; 
 
     // Fetch the errand and verify the client owns it
@@ -237,7 +238,25 @@ exports.acceptRunnerApplication = async (req, res) => {
       return res.status(403).json({ message: 'You are not authorized to accept applications for this errand' });
 
     // Get the selected runner application
-    const application = await RunnerApplication.findByPk(applicationId);
+     const application = await RunnerApplication.findByPk(applicationId);
+     let errandData = errand.toJSON();
+
+    // const application = await RunnerApplication.findOne({
+    //   where: { errandId: id }
+    // });
+
+    // Add computed price
+
+    console.log('application price: ', application);
+    console.log('application bid price: ', application.bidPrice);
+    console.log('application current price: ', application.currentPrice);
+
+    
+    let finalprice = application
+      ? (application.bidPrice || application.currentPrice)
+      : null;
+   await  errand.update({price:finalprice})
+
     if (!application || application.errandId !== errandId)
       return res.status(404).json({ message: 'Application not found for this errand' });
 
