@@ -407,12 +407,12 @@ exports.rejectRunnerApplication = async (req, res) => {
       message: `Your application for the errand "${errand.title}" was rejected by the client.`,
       isRead: false,
     });
+    await application.destroy(applicationId);
 
     return res.status(200).json({
       message: 'Runner application rejected successfully',
       data: {
         rejectedApplication: application,
-        errand,
       },
     });
   } catch (error) {
