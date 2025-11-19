@@ -552,13 +552,6 @@ router.patch('/errands/:errandId/applications/:applicationId/accept', authentica
  *           application/json:
  *             example:
  *               message: Runner application not found for this errand
- *       500:
- *         description: Internal server error
- *         content:
- *           application/json:
- *             example:
- *               message: Internal server error
- *               error: "Error details..."
  */
 router.patch('/errands/:errandId/applications/:applicationId/reject', authenticated, rejectRunnerApplication);
 
