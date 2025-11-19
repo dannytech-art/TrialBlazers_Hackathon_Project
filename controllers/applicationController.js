@@ -21,6 +21,14 @@ exports.applyForErrand = async (req, res) => {
       return res.status(400).json({ message: 'Complete your KYC verification to apply for errands!' });
     }
 
+      const existing = await RunnerApplication.findOne({where: { runnerId, errandId }});
+
+    if (existing && existing.status === 'Rejected') {
+        return res.status(400).json({
+          message: 'You cannot reapply for this errand after being rejected.'
+    });
+  }
+
     // Check Errand Exists
     const errand = await Errand.findByPk(errandId);
     if (!errand) return res.status(404).json({ message: 'Errand not found' });
@@ -363,13 +371,22 @@ exports.rejectRunnerApplication = async (req, res) => {
     // Update application status to 'Rejected'
     await application.update({ status: 'Rejected' });
 
-      const remaining = await RunnerApplication.count({
+    // Re-open errand if no pending applications remain
+    const remaining = await RunnerApplication.count({
       where: { errandId, status: 'Pending' },
     });
 
     if (remaining === 0) {
-      await errand.update({ status: 'Open' }); // or "Pending", depending on your business logic
+      await errand.update({ status: 'Open' });
     }
+
+    // 🔔 Send rejection notification to runner
+    await Notification.create({
+      userId: application.runnerId,
+      title: "Application Rejected",
+      message: `Your application for the errand "${errand.title}" was rejected by the client.`,
+      isRead: false,
+    });
 
     return res.status(200).json({
       message: 'Runner application rejected successfully',
