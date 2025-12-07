@@ -1,61 +1,42 @@
-const { Sequelize, DataTypes, Model } = require('sequelize');
-const sequelize = require('../database/databases');
+const mongoose = require("mongoose");
 
-class Wallet extends Model {}
-
-Wallet.init(
+const WalletSchema = new mongoose.Schema(
   {
-    id: {
-      allowNull: false,
-      primaryKey: true,
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4
-    },
     runnerId: {
-      type: DataTypes.UUID,
-      allowNull: false,
-      references: { model: 'Users', key: 'id' },
-      unique: true // Each runner can have only one wallet
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      unique: true, // Each runner has only one wallet
     },
+
     balance: {
-      type: DataTypes.DECIMAL(15, 2), // Supports up to 999,999,999,999.99
-      allowNull: false,
-      defaultValue: 0.00
+      type: mongoose.Schema.Types.Decimal128, 
+      default: 0.00,
+      required: true,
     },
+
     currency: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      defaultValue: 'NGN'
+      type: String,
+      default: "NGN",
+      required: true,
     },
+
     isActive: {
-      type: DataTypes.BOOLEAN,
-      allowNull: false,
-      defaultValue: true
+      type: Boolean,
+      default: true,
+      required: true,
     },
+
     lastTransactionAt: {
-      type: DataTypes.DATE,
-      allowNull: true
+      type: Date,
+      default: null,
     },
-    createdAt: {
-      allowNull: false,
-      type: DataTypes.DATE
-    },
-    updatedAt: {
-      allowNull: false,
-      type: DataTypes.DATE
-    }
   },
   {
-    sequelize,
-    modelName: 'Wallets',
-    timestamps: true,
-    indexes: [
-      {
-        unique: true,
-        fields: ['runnerId']
-      }
-    ]
+    timestamps: true, // Automatically creates createdAt & updatedAt
   }
 );
 
-module.exports = Wallet;
+const Wallet = mongoose.model("Wallet", WalletSchema);
+
+module.exports = Wallet

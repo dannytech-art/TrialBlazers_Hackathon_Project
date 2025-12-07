@@ -1,37 +1,23 @@
-'use strict';
+const mongoose = require('mongoose');
 
-const { Model, DataTypes, UUIDV4 } = require('sequelize');
-const sequelize = require('../database/databases');
-
-class Admin extends Model {}
-
-Admin.init(
+const adminSchema = new mongoose.Schema(
   {
-    id: {
-      allowNull: false,
-      primaryKey: true,
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
-    },
     email: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      unique: true,
-      set(value) {
-        // Ensure lowercase and trimmed email before savingrs
-        this.setDataValue('email', value.trim().toLowerCase());
-      },
+      type: String,
+      lowercase: true,
+      required: true,
+      unique: true
     },
     password: {
-      type: DataTypes.STRING,
-      allowNull: false,
+      type: String,
+      required: true
     },
   },
   {
-    sequelize,            // Sequelize instance
-    modelName: 'Admins',   // Model name
     timestamps: true,     // Automatically add createdAt/updatedAt
   }
 );
+
+const Admin = mongoose.model('Admin', adminSchema);
 
 module.exports = Admin;

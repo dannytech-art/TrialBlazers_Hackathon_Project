@@ -1,8 +1,10 @@
 const cloudinary = require('../config/cloudinary');
 const fs = require('fs');
-const db = require('../models');
 const RunnerApplication = require('../models/runnerapplication');
-const {Errand, User, KYC, Wallet} = db
+const Errand = require('../models/errand');
+const User = require('../models/users');
+const KYC = require('../models/kyc');
+const Wallet = require('../models/wallet');
 
 exports.createErrand = async (req, res) => {
   try {
@@ -15,7 +17,7 @@ exports.createErrand = async (req, res) => {
       return res.status(401).json({ message: 'User not authenticated' });
     }
 
-    const fullUser = await User.findByPk(userFromToken.id);
+    const fullUser = await User.findById(userFromToken.id);
     if (!fullUser) {
       return res.status(404).json({ message: 'User not found' });
     }
@@ -24,7 +26,7 @@ exports.createErrand = async (req, res) => {
       return res.status(403).json({ message: 'Only Clients can create errands' });
     };
 
-    const clientKYC = await KYC.findOne({where: {userId}});
+    const clientKYC = await KYC.findOne({userId});
     
     if (!clientKYC || clientKYC.status !== 'verified'){
       return res.status(400).json({ message: 'Complete your KYC verification to post an errand!'})
@@ -75,28 +77,23 @@ exports.createErrand = async (req, res) => {
 
 exports.getAllErrands = async (req, res) => {
   try {
-    const errands = await Errand.findAll({
-      attributes: {
-        exclude: ['startOTP', 'deliveryOTP', 'startOTPExpires', 'deliveryOTPExpires']
-      },
-      include: [
-        {
-          model: User,
-          as: 'poster',
-          attributes: ['id', 'firstName', 'lastName', 'email'] 
-        }
-      ],
-      order: [['createdAt', 'DESC']]
-    });
+    const errands = await Errand.find()
+      .select("-startOTP -deliveryOTP -startOTPExpires -deliveryOTPExpires")
+      .populate({
+        path: "userId",
+        select: "id firstName lastName email"
+      })
+      .sort({ createdAt: -1 });
 
     res.status(200).json({
-      message: 'All errands retrieved successfully',
+      message: "All errands retrieved successfully",
       totalErrands: errands.length,
       data: errands,
     });
+
   } catch (error) {
     res.status(500).json({
-      message: 'Internal server error while fetching errands',
+      message: "Internal server error while fetching errands",
       error: error.message,
     });
   }
@@ -107,58 +104,55 @@ exports.getErrandById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    let foundErrand = await Errand.findByPk(id, {
-      include: [
-        {
-          model: User,
-          as: 'poster',
-          attributes: ['id', 'firstName', 'lastName', 'email', 'bio', 'rating', 'totalJobs']
-        },
-        {
-          model: User,
-          as: 'assignedRunner',
-          attributes: ['id', 'firstName', 'lastName', 'email', 'bio', 'rating', 'totalJobs']
-        }
-      ]
-    });
+    const foundErrand = await Errand.findById(id)
+      .populate({
+        path: "userId",
+        select: "id firstName lastName email bio"
+      })
+      .populate({
+        path: "assignedTo",
+        select: "id firstName lastName email bio rating totalJobs"
+      });
 
     if (!foundErrand) {
-      return res.status(404).json({ message: 'Errand not found' });
+      return res.status(404).json({ message: "Errand not found" });
     }
 
-    // Convert to plain object so we can add fields cleanly
-   
     return res.status(200).json({
-      message: 'Errand retrieved successfully',
-      data: foundErrand
+      message: "Errand retrieved successfully",
+      data: foundErrand,
     });
 
   } catch (error) {
     return res.status(500).json({
-      message: 'Internal server error while getting errand by ID',
-      error: error.message
+      message: "Internal server error while getting errand by ID",
+      error: error.message,
     });
   }
 };
 
+
 exports.getErrandByClientId = async (req, res) => {
   try {
     const userFromToken = req.user;
-    const errands = await Errand.findAll({
-      where: { userId: userFromToken.id },
-      attributes: {
-      exclude: ['startOTP', 'deliveryOTP', 'startOTPExpires', 'deliveryOTPExpires'] },
-      include: [{ model: User, as: 'assignedRunner', attributes: ['id', 'firstName', 'lastName', 'email'] }],
-      order: [['createdAt', 'DESC']],
-    });
+
+    const errands = await Errand.find({ userId: userFromToken.id })
+      .select("-startOTP -deliveryOTP -startOTPExpires -deliveryOTPExpires")
+      .populate({
+        path: "assignedTo",
+        select: "id firstName lastName email"
+      })
+      .sort({ createdAt: -1 });
+
     res.status(200).json({
-      message: 'Errands retrieved successfully',
+      message: "Errands retrieved successfully",
       data: errands,
     });
+
   } catch (error) {
-    console.error('Fetching Errand Error:', error);
+    console.error("Fetching Errand Error:", error);
     res.status(500).json({
-      message: 'Internal server error while fetching errand',
+      message: "Internal server error while fetching errand",
       error: error.message,
     });
   }
@@ -167,21 +161,24 @@ exports.getErrandByClientId = async (req, res) => {
 exports.getErrandByRunnerId = async (req, res) => {
   try {
     const userFromToken = req.user;
-    const errands = await Errand.findAll({
-      where: { assignedTo: userFromToken.id },
-      attributes: {
-      exclude: ['startOTP', 'deliveryOTP', 'startOTPExpires', 'deliveryOTPExpires'] },
-      include: [{ model: User, as: 'poster', attributes: ['id', 'firstName', 'lastName', 'email'] }],
-      order: [['createdAt', 'DESC']],
-    });
+
+    const errands = await Errand.find({ assignedTo: userFromToken.id })
+      .select("-startOTP -deliveryOTP -startOTPExpires -deliveryOTPExpires")
+      .populate({
+        path: "userId",
+        select: "id firstName lastName email"
+      })
+      .sort({ createdAt: -1 });
+
     res.status(200).json({
-      message: 'Runners Errands retrieved successfully',
+      message: "Runner’s errands retrieved successfully",
       data: errands,
     });
+
   } catch (error) {
-    console.error('Fetching Errand Error:', error);
+    console.error("Fetching Errand Error:", error);
     res.status(500).json({
-      message: 'Internal server error while fetching errand',
+      message: "Internal server error while fetching errand",
       error: error.message,
     });
   }
@@ -194,7 +191,7 @@ exports.updateErrand = async (req, res) => {
     const { id } = req.params;
     const { title, description, pickupAddress, deliveryAddress, pickupContact, price } = req.body;
 
-    const foundErrand = await Errand.findByPk(id);
+    const foundErrand = await Errand.findById(id);
     if (!foundErrand) {
       return res.status(404).json({ message: 'Errand not found' });
     }
@@ -230,16 +227,15 @@ exports.updateErrand = async (req, res) => {
         url: uploadResult.secure_url,
       };
     }
+        foundErrand.title = title || foundErrand.title;
+        foundErrand.description= description || foundErrand.description;
+        foundErrand.pickupAddress = pickupAddress || foundErrand.pickupAddress;
+        foundErrand.deliveryAddress = deliveryAddress || foundErrand.deliveryAddress;
+        foundErrand.pickupContact = pickupContact || foundErrand.pickupContact;
+        foundErrand.price = price ? parseFloat(price) : foundErrand.price;
+        foundErrand.attachments = updatedImage,
 
-    await foundErrand.update({
-      title: title || foundErrand.title,
-      description: description || foundErrand.description,
-      pickupAddress: pickupAddress || foundErrand.pickupAddress,
-      deliveryAddress: deliveryAddress || foundErrand.deliveryAddress,
-      pickupContact: pickupContact || foundErrand.pickupContact,
-      price: price ? parseFloat(price) : foundErrand.price,
-      attachments: updatedImage,
-    });
+    await foundErrand.save();
 
     res.status(200).json({
       message: 'Errand updated successfully',
@@ -257,13 +253,13 @@ exports.updateErrand = async (req, res) => {
 exports.deleteErrand = async (req, res) => {
   try {
     const { id } = req.params;
-    const foundErrand = await Errand.findByPk(id);
+    const foundErrand = await Errand.findById(id);
 
     if (!foundErrand) {
       return res.status(404).json({ message: 'Errand not found' });
     }
 
-    await foundErrand.destroy({where: {id}});
+    await Errand.findByIdAndDelete(id);
 
     res.status(200).json({
       message: 'Errand deleted successfully',
@@ -284,13 +280,16 @@ exports.verifyStartOtp = async (req, res) => {
     const errand = await Errand.findByPk(errandId);
      if (!errand) return res.status(404).json({ message: 'Errand not found' });
 
-    const application = await RunnerApplication.findOne({ where: { errandId, runnerId } });
+    const application = await RunnerApplication.findOne({ errandId, runnerId });
     if (!application) return res.status(404).json({ message: 'Application not found' });
     
     if (String(otp).trim() !== String(errand.startOTP).trim()) {
       return res.status(400).json({ message: "Invalid OTP" });
    }
-   await errand.update({startOTP: null});
+
+   errand.startOTP = null;
+   await errand.save();
+
     return res.status(200).json({
           message: 'Start OTP verified',
         })
@@ -308,29 +307,43 @@ exports.verifyDeliveryOtp = async (req, res) => {
     const { errandId } = req.params;
     const runnerId = req.user.id;
 
-    const errand = await Errand.findByPk(errandId);
-    if (!errand) return res.status(404).json({ message: 'Errand not found' });
+    // Find Errand
+    const errand = await Errand.findById(errandId);
+    if (!errand) {
+      return res.status(404).json({ message: "Errand not found" });
+    }
 
-   
-    const application = await RunnerApplication.findOne({ where: { errandId, runnerId } });
-    if (!application) return res.status(404).json({ message: 'Application not found' });
+    //  Find Runner Application
+    const application = await RunnerApplication.findOne({
+      errandId: errandId,
+      runnerId: runnerId
+    });
 
+    if (!application) {
+      return res.status(404).json({ message: "Application not found" });
+    }
 
+    //  Validate OTP
     if (String(otp).trim() !== String(errand.deliveryOTP).trim()) {
       return res.status(400).json({ message: "Invalid OTP" });
     }
 
-    await errand.update({deliveryOTP: null, status :"Completed"});
+    errand.deliveryOTP = null;
+    errand.status = "Completed";
+    await errand.save();
 
+    //  Wallet Logic
     const commissionRate = 0.10;
     const amountToCredit = Number(errand.price) * (1 - commissionRate);
-       console.log(`Crediting amount: ${amountToCredit} to runner ID`);
-    let wallet = await Wallet.findOne({ where: { runnerId } });
-    console.log(`i am wallet: ${wallet}`);
-    
+
+    let wallet = await Wallet.findOne({ runnerId });
+
     if (!wallet) {
-      wallet = await Wallet.create({ runnerId, balance: 0 });
-      console.log(`Created new wallet for runner ID: ${wallet}`);
+      wallet = await Wallet.create({
+        runnerId,
+        balance: 0,
+        lastTransactionAt: new Date(),
+      });
     }
 
     wallet.balance = Number(wallet.balance) + amountToCredit;
@@ -338,7 +351,7 @@ exports.verifyDeliveryOtp = async (req, res) => {
     await wallet.save();
 
     return res.status(200).json({
-      message: `Delivery OTP verified! crediting NGN ${amountToCredit} to your wallet.`,
+      message: `Delivery OTP verified! Crediting NGN ${amountToCredit} to your wallet.`,
       creditedAmount: amountToCredit,
       walletBalance: wallet.balance
     });
@@ -346,8 +359,8 @@ exports.verifyDeliveryOtp = async (req, res) => {
   } catch (error) {
     console.log(error);
     res.status(500).json({
-      message: 'Internal server error while verifying delivery OTP',
-      error: error.message,
+      message: "Internal server error while verifying delivery OTP",
+      error: error.message
     });
   }
 };

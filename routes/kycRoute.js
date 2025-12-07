@@ -1,7 +1,5 @@
 const router = require('express').Router();
 
-const uploads = require('../middleware/multer');
-
 const upload = require('../middleware/multer');
 
 const { authenticated, isAdmin } = require('../middleware/authenticate');
@@ -240,19 +238,20 @@ router.get('/', isAdmin, getAllKYC);
  * @swagger
  * /api/v1/kyc/{id}/status:
  *   put:
- *     summary: Update KYC status (Admin only)
- *     description: Allows an admin to update a user's KYC verification status (approved, rejected, or verified).
- *     tags: [KYC]
+ *     summary: Update a user's KYC status
+ *     description: Admin-only endpoint to update a KYC record status (approved, rejected, or verified).
+ *     tags:
+ *       - KYC
  *     security:
- *       - bearerAuth: []
+ *       - AdminAuth: []   # Your admin auth middleware name
  *     parameters:
- *       - name: id
- *         in: path
+ *       - in: path
+ *         name: id
  *         required: true
- *         description: The ID of the KYC record to update.
+ *         description: The ID of the KYC record to update
  *         schema:
  *           type: string
- *           example: 8f2dca3b-4f1a-48b3-bf23-cb7831f3e37a
+ *           example: 692810a6ca635ffc7d37f016
  *     requestBody:
  *       required: true
  *       content:
@@ -279,42 +278,39 @@ router.get('/', isAdmin, getAllKYC);
  *                   example: KYC approved successfully
  *                 data:
  *                   type: object
- *                   properties:
- *                     id:
- *                       type: string
- *                       example: 8f2dca3b-4f1a-48b3-bf23-cb7831f3e37a
- *                     userId:
- *                       type: string
- *                       example: 7e1b25f0-87f3-4dbf-8b4b-5e6fcb7cced9
- *                     governmentIdCard:
- *                       type: string
- *                       example: https://res.cloudinary.com/demo/image/upload/v1234567/kyc_uploads/gov_id.jpg
- *                     proofOfAddressImage:
- *                       type: string
- *                       example: https://res.cloudinary.com/demo/image/upload/v1234567/kyc_uploads/address_proof.jpg
- *                     selfieWithIdCard:
- *                       type: string
- *                       example: https://res.cloudinary.com/demo/image/upload/v1234567/kyc_uploads/selfie_id.jpg
- *                     status:
- *                       type: string
- *                       example: approved
- *                     reviewedBy:
- *                       type: string
- *                       example: 1bcb0a62-89f2-4a9e-9b5c-937c6a71e1e4
- *                     updatedAt:
- *                       type: string
- *                       format: date-time
- *                       example: 2025-10-29T10:15:23.000Z
+ *                   description: Updated KYC object
  *       400:
- *         description: Invalid KYC status
- *       401:
- *         description: Unauthorized — missing or invalid token
+ *         description: Invalid status provided
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Invalid KYC status
  *       403:
- *         description: Forbidden — user is not an admin
+ *         description: Unauthorized — only admins can access this endpoint
  *       404:
- *         description: KYC not found
+ *         description: KYC record not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: KYC not found
  *       500:
- *         description: Internal Server Error
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Internal Server Error
  */
 router.put('/:id/status', isAdmin, updateKYCStatus);
 

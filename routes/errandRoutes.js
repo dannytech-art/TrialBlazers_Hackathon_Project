@@ -132,17 +132,17 @@ router.get('/errand/getall', getAllErrands);
  * @swagger
  * /api/v1/errand/get/{id}:
  *   get:
- *     summary: Get an errand by ID
- *     tags: [Errands]
- *     description: Retrieve details of a specific errand by its unique ID.
+ *     summary: Get a single errand by ID
+ *     description: Retrieves detailed information about an errand, including poster and assigned runner details.
+ *     tags:
+ *       - Errands
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
- *         description: UUID of the errand to retrieve
  *         schema:
  *           type: string
- *           format: uuid
+ *         description: The ID of the errand to retrieve
  *     responses:
  *       200:
  *         description: Errand retrieved successfully
@@ -153,13 +153,20 @@ router.get('/errand/getall', getAllErrands);
  *               properties:
  *                 message:
  *                   type: string
- *                   example: "Errand retrieved successfully"
+ *                   example: Errand retrieved successfully
  *                 data:
  *                   type: object
+ *                   description: Errand object
  *       404:
  *         description: Errand not found
- *       500:
- *         description: Server error while retrieving errand
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Errand not found
  */
 router.get('/errand/get/:id', getErrandById);
 
@@ -168,18 +175,21 @@ router.get('/errand/get/:id', getErrandById);
  * /api/v1/errand/update/{id}:
  *   put:
  *     summary: Update an existing errand
- *     tags: [Errands]
- *     description: Allows a client to update an existing errand. Only the owner (creator) of the errand can update it. Optionally supports updating the attachment file.
+ *     description: Updates an errand's details. Only the creator of the errand can update it. Supports optional image upload.
+ *     tags:
+ *       - Errands
+ *     security:
+ *       - bearerAuth: []   # If JWT authentication is used
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
- *         description: UUID of the errand to update
+ *         description: ID of the errand to update
  *         schema:
  *           type: string
- *           format: uuid
+ *           example: "692810a6ca635ffc7d37f016"
  *     requestBody:
- *       required: true
+ *       required: false
  *       content:
  *         multipart/form-data:
  *           schema:
@@ -187,26 +197,26 @@ router.get('/errand/get/:id', getErrandById);
  *             properties:
  *               title:
  *                 type: string
- *                 example: "Deliver package to Victoria Island"
+ *                 example: "Pick up documents"
  *               description:
  *                 type: string
- *                 example: "Deliver a new phone package to Victoria Island."
+ *                 example: "Go to Yaba and pick up my printed documents"
  *               pickupAddress:
  *                 type: string
- *                 example: "Lekki Phase 1, Lagos"
+ *                 example: "12, Herbert Macaulay Road, Yaba"
  *               deliveryAddress:
  *                 type: string
- *                 example: "Victoria Island, Lagos"
+ *                 example: "Lekki Phase 1"
  *               pickupContact:
  *                 type: string
- *                 example: "08012345678"
+ *                 example: "+2348144455667"
  *               price:
  *                 type: number
- *                 example: 5000
+ *                 example: 3500
  *               attachments:
  *                 type: string
  *                 format: binary
- *                 description: Optional file attachment for the errand (image or document)
+ *                 description: Optional image file to upload
  *     responses:
  *       200:
  *         description: Errand updated successfully
@@ -217,38 +227,30 @@ router.get('/errand/get/:id', getErrandById);
  *               properties:
  *                 message:
  *                   type: string
- *                   example: "Errand updated successfully"
+ *                   example: Errand updated successfully
  *                 data:
  *                   type: object
- *                   properties:
- *                     id:
- *                       type: string
- *                       format: uuid
- *                     title:
- *                       type: string
- *                     description:
- *                       type: string
- *                     pickupAddress:
- *                       type: string
- *                     deliveryAddress:
- *                       type: string
- *                     pickupContact:
- *                       type: string
- *                     price:
- *                       type: number
- *                     attachments:
- *                       type: object
- *                       properties:
- *                         publicId:
- *                           type: string
- *                         url:
- *                           type: string
+ *                   description: Updated errand object
  *       403:
- *         description: User not allowed to update this errand
+ *         description: Not allowed to update this errand
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: You are not allowed to update this errand
  *       404:
  *         description: Errand not found
- *       500:
- *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Errand not found
  */
 router.put('/errand/update/:id', authenticated, uploads.single('attachments'), updateErrand);
 
@@ -256,17 +258,18 @@ router.put('/errand/update/:id', authenticated, uploads.single('attachments'), u
  * @swagger
  * /api/v1/errand/delete/{id}:
  *   delete:
- *     summary: Delete an errand by ID
- *     tags: [Errands]
- *     description: Permanently remove an errand from the system by its unique ID.
+ *     summary: Delete an errand
+ *     description: Deletes an errand by ID. Only accessible to the owner (if authentication is applied).
+ *     tags:
+ *       - Errands
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
- *         description: UUID of the errand to delete
+ *         description: ID of the errand to delete
  *         schema:
  *           type: string
- *           format: uuid
+ *           example: "692810a6ca635ffc7d37f016"
  *     responses:
  *       200:
  *         description: Errand deleted successfully
@@ -277,11 +280,17 @@ router.put('/errand/update/:id', authenticated, uploads.single('attachments'), u
  *               properties:
  *                 message:
  *                   type: string
- *                   example: "Errand deleted successfully"
+ *                   example: Errand deleted successfully
  *       404:
  *         description: Errand not found
- *       500:
- *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Errand not found
  */
 router.delete('/errand/delete/:id', deleteErrand);
 
@@ -458,20 +467,22 @@ router.get('/errand/runner-errands', authenticated, getErrandByRunnerId);
  * @swagger
  * /api/v1/errands/{errandId}/verify-start:
  *   put:
- *     summary: Verify Start OTP (Runner confirms pickup)
- *     description: Allows the **Runner** to verify the 4-digit Start OTP sent by the **Client**. Once verified, it confirms that the runner has started the errand (pickup confirmed).
+ *     summary: Verify start OTP for an errand
+ *     description: 
+ *       Runner submits the start OTP given by the client. 
+ *       If correct, the OTP is cleared and the errand can proceed to the next phase.
  *     tags:
- *       - OTP Verification
+ *       - Errands
  *     security:
- *       - BearerAuth: []
+ *       - UserAuth: []     # Adjust to match your actual auth name
  *     parameters:
- *       - name: errandId
- *         in: path
+ *       - in: path
+ *         name: errandId
+ *         description: ID of the errand for which the start OTP is being verified
  *         required: true
- *         description: The ID of the errand being verified
  *         schema:
  *           type: string
- *           format: uuid
+ *           example: "692810a6ca635ffc7d37f016"
  *     requestBody:
  *       required: true
  *       content:
@@ -483,26 +494,39 @@ router.get('/errand/runner-errands', authenticated, getErrandByRunnerId);
  *             properties:
  *               otp:
  *                 type: string
- *                 example: "4821"
+ *                 description: The 4-digit OTP sent to the client for starting the errand
+ *                 example: "1234"
  *     responses:
  *       200:
- *         description: Start OTP verified successfully
+ *         description: OTP verified successfully
  *         content:
  *           application/json:
- *             example:
- *               message: Start OTP verified for Runner
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Start OTP verified
  *       400:
- *         description: Invalid OTP or verification failure
+ *         description: Invalid OTP
  *         content:
  *           application/json:
- *             example:
- *               message: Invalid OTP
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Invalid OTP
  *       404:
  *         description: Errand or application not found
  *         content:
  *           application/json:
- *             example:
- *               message: Errand not found
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Application not found
  */
 router.put('/errands/:errandId/verify-start', authenticated, verifyStartOtp);
 
@@ -510,20 +534,22 @@ router.put('/errands/:errandId/verify-start', authenticated, verifyStartOtp);
  * @swagger
  * /api/v1/errands/{errandId}/verify-delivery:
  *   put:
- *     summary: Verify Delivery OTP (Runner confirms delivery completion)
- *     description: Allows the **Runner** to verify the 4-digit Delivery OTP shared by the **Client**. Once verified, the system confirms the delivery is completed.
+ *     summary: Verify delivery OTP and complete the errand
+ *     description: 
+ *       Verifies the delivery OTP provided by the runner. 
+ *       If correct, the errand is marked as completed and the runner's wallet is credited.
  *     tags:
- *       - OTP Verification
+ *       - Errands
  *     security:
- *       - BearerAuth: []
+ *       - UserAuth: []    # Auth middleware name
  *     parameters:
- *       - name: errandId
- *         in: path
+ *       - in: path
+ *         name: errandId
  *         required: true
- *         description: The ID of the errand being verified
+ *         description: ID of the errand to verify delivery OTP for
  *         schema:
  *           type: string
- *           format: uuid
+ *           example: 692810a6ca635ffc7d37f016
  *     requestBody:
  *       required: true
  *       content:
@@ -535,26 +561,45 @@ router.put('/errands/:errandId/verify-start', authenticated, verifyStartOtp);
  *             properties:
  *               otp:
  *                 type: string
- *                 example: "9634"
+ *                 description: The OTP sent to the client for delivery confirmation
+ *                 example: "4567"
  *     responses:
  *       200:
- *         description: Delivery OTP verified successfully
+ *         description: Delivery OTP verified successfully, wallet credited
  *         content:
  *           application/json:
- *             example:
- *               message: Delivery OTP verified for Runner
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Delivery OTP verified! Crediting NGN 4500 to your wallet.
+ *                 creditedAmount:
+ *                   type: number
+ *                   example: 4500
+ *                 walletBalance:
+ *                   type: number
+ *                   example: 12000
  *       400:
- *         description: Invalid OTP or verification failure
+ *         description: Invalid OTP
  *         content:
  *           application/json:
- *             example:
- *               message: Invalid OTP
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Invalid OTP
  *       404:
- *         description: Errand or application not found
+ *         description: Errand or Application not found
  *         content:
  *           application/json:
- *             example:
- *               message: Errand not found
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Errand not found 
  */
 router.put('/errands/:errandId/verify-delivery', authenticated, verifyDeliveryOtp)
 

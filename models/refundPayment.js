@@ -1,63 +1,54 @@
-const { Sequelize, DataTypes, Model } = require('sequelize');
-const sequelize = require('../database/databases');
+const mongoose = require("mongoose");
 
-class Refund extends Model {}
-
-Refund.init(
+const RefundSchema = new mongoose.Schema(
   {
-    id: {
-      allowNull: false,
-      primaryKey: true,
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
-    },
     paymentId: {
-      type: DataTypes.UUID,
-      allowNull: false,
-      references: { model: 'Payments', key: 'id' }, // relation to Payment table
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Payment",
+      required: true
     },
+
     refundReference: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      unique: true,
+      type: String,
+      required: true,
+      unique: true
     },
+
     amount: {
-      type: DataTypes.FLOAT,
-      allowNull: false,
+      type: Number,
+      required: true
     },
+
     reason: {
-      type: DataTypes.TEXT,
-      allowNull: true,
+      type: String,
+      default: null
     },
+
     verifiedBy: {
-  type: DataTypes.UUID,
-  allowNull: true,
-  references: { model: 'Users', key: 'id' },
-},
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null
+    },
+
     status: {
-      type: DataTypes.ENUM('processing', 'success', 'failed'),
-      defaultValue: 'processing',
+      type: String,
+      enum: ["processing", "success", "failed"],
+      default: "processing"
     },
+
     refundResponse: {
-      type: DataTypes.JSON, // stores API response details (optional)
-      allowNull: true,
-    },
-    createdAt: {
-      allowNull: false,
-      type: DataTypes.DATE,
-      defaultValue: Sequelize.NOW,
-    },
-    updatedAt: {
-      allowNull: false,
-      type: DataTypes.DATE,
-      defaultValue: Sequelize.NOW,
-    },
+      type: Object,
+      default: null // works like JSON in Sequelize
+    }
   },
   {
-    sequelize,
-    modelName: 'Refunds',
-    timestamps: true,
+    timestamps: true // Keep createdAt & updatedAt automatically
   }
 );
 
-module.exports = Refund;
+// Unique index for refundReference
+RefundSchema.index({ refundReference: 1 }, { unique: true });
+
+const Refund = mongoose.model("Refund", RefundSchema);
+
+module.exports = Refund
