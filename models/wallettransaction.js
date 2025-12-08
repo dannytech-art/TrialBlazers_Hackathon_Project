@@ -1,83 +1,66 @@
-const { Sequelize, DataTypes, Model } = require('sequelize');
-const sequelize = require('../database/databases');
+const mongoose = require("mongoose");
 
-class WalletTransaction extends Model {}
-
-WalletTransaction.init(
+const WalletTransactionSchema = new mongoose.Schema(
   {
-    id: {
-      allowNull: false,
-      primaryKey: true,
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4
-    },
     walletId: {
-      type: DataTypes.UUID,
-      allowNull: false,
-      references: { model: 'Wallets', key: 'id' }
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Wallet",
+      required: true
     },
+
     amount: {
-      type: DataTypes.DECIMAL(15, 2),
-      allowNull: false
+      type: mongoose.Schema.Types.Decimal128,
+      required: true
     },
+
     type: {
-      type: DataTypes.ENUM(['credit', 'debit']),
-      allowNull: false
+      type: String,
+      enum: ["credit", "debit"],
+      required: true
     },
+
     description: {
-      type: DataTypes.TEXT,
-      allowNull: true
+      type: String,
+      default: null
     },
+
     reference: {
-      type: DataTypes.STRING,
-      allowNull: true // Payment ID or other reference
+      type: String,
+      default: null
     },
+
     status: {
-      type: DataTypes.ENUM(['pending', 'completed', 'failed', 'cancelled']),
-      allowNull: false,
-      defaultValue: 'completed'
+      type: String,
+      enum: ["pending", "completed", "failed", "cancelled"],
+      default: "completed"
     },
+
     balanceBefore: {
-      type: DataTypes.DECIMAL(15, 2),
-      allowNull: true
+      type: mongoose.Schema.Types.Decimal128,
+      default: null
     },
+
     balanceAfter: {
-      type: DataTypes.DECIMAL(15, 2),
-      allowNull: true
+      type: mongoose.Schema.Types.Decimal128,
+      default: null
     },
+
     metadata: {
-      type: DataTypes.JSON,
-      allowNull: true,
-      defaultValue: {}
-    },
-    createdAt: {
-      allowNull: false,
-      type: DataTypes.DATE
-    },
-    updatedAt: {
-      allowNull: false,
-      type: DataTypes.DATE
+      type: Object,
+      default: {}
     }
   },
   {
-    sequelize,
-    modelName: 'WalletTransactions',
-    timestamps: true,
-    indexes: [
-      {
-        fields: ['walletId']
-      },
-      {
-        fields: ['reference']
-      },
-      {
-        fields: ['type']
-      },
-      {
-        fields: ['status']
-      }
-    ]
+    timestamps: true // createdAt & updatedAt
   }
 );
 
-module.exports = WalletTransaction;
+// Indexes equivalent to Sequelize
+WalletTransactionSchema.index({ walletId: 1 });
+WalletTransactionSchema.index({ reference: 1 });
+WalletTransactionSchema.index({ type: 1 });
+WalletTransactionSchema.index({ status: 1 });
+
+const WalletTransaction = mongoose.model("WalletTransaction", WalletTransactionSchema);
+
+module.exports = WalletTransaction

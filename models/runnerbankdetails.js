@@ -1,86 +1,52 @@
-const { Sequelize, DataTypes, Model } = require('sequelize');
-const sequelize = require('../database/databases');
+const mongoose = require("mongoose");
 
-class RunnerBankDetails extends Model {}
-
-RunnerBankDetails.init(
+const RunnerBankDetailsSchema = new mongoose.Schema(
   {
-    id: {
-      allowNull: false,
-      primaryKey: true,
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4
-    },
     runnerId: {
-      type: DataTypes.UUID,
-      allowNull: false,
-      references: { model: 'Users', key: 'id' }
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",    // References User collection
+      required: true,
     },
     bankCode: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      comment: 'Bank code',
+      type: String,
+      required: true,
     },
     bankName: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      comment: 'Bank name (e.g., "First Bank of Nigeria")'
+      type: String,
+      required: true,
     },
     accountNumber: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      comment: 'Bank account number'
+      type: String,
+      required: true,
     },
     accountName: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      comment: 'Account holder name'
+      type: String,
+      required: true,
     },
     isVerified: {
-      type: DataTypes.BOOLEAN,
-      allowNull: false,
-      defaultValue: false,
-      comment: 'Whether the bank account is verified'
+      type: Boolean,
+      default: false,
     },
     isActive: {
-      type: DataTypes.BOOLEAN,
-      allowNull: false,
-      defaultValue: true,
-      comment: 'Whether this bank account is active for withdrawals'
+      type: Boolean,
+      default: true,
     },
     verificationDate: {
-      type: DataTypes.DATE,
-      allowNull: true,
-      comment: 'Date when account was verified'
+      type: Date,
+      default: null,
     },
-    createdAt: {
-      allowNull: false,
-      type: DataTypes.DATE
-    },
-    updatedAt: {
-      allowNull: false,
-      type: DataTypes.DATE
-    }
   },
   {
-    sequelize,
-    modelName: 'RunnerBankDetails',
-    timestamps: true,
-    indexes: [
-      {
-        fields: ['runnerId']
-      },
-      {
-        fields: ['bankCode']
-      },
-      {
-        fields: ['isVerified']
-      },
-      {
-        fields: ['isActive']
-      }
-    ]
+    timestamps: true, // Auto-handles createdAt & updatedAt
   }
 );
 
-module.exports = RunnerBankDetails;
+// 🔍 Indexes (equivalent to Sequelize indexes)
+RunnerBankDetailsSchema.index({ runnerId: 1 });
+RunnerBankDetailsSchema.index({ bankCode: 1 });
+RunnerBankDetailsSchema.index({ isVerified: 1 });
+RunnerBankDetailsSchema.index({ isActive: 1 });
+
+const RunnerBankDetails = mongoose.model("RunnerBankDetails", RunnerBankDetailsSchema); 
+
+module.exports = RunnerBankDetails

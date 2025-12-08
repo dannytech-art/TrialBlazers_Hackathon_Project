@@ -1,49 +1,39 @@
-const {  DataTypes, Model,  } = require('sequelize');
-const sequelize = require('../database/databases')
-  class Notification extends Model { }
+const mongoose = require('mongoose');
 
-  Notification.init({
-     id: {
-        allowNull: false,
-        primaryKey: true,
-        type: DataTypes.UUID,
-        defaultValue: DataTypes.UUIDV4
-      },
-      userId: {
-        type: DataTypes.UUID,
-        references: { model: 'Users', key: 'id' },
-        onDelete: 'CASCADE',
-        onUpdate: 'CASCADE'
-      },
-      type: {
-        type: DataTypes.STRING, // e.g. 'application_accepted', 'kyc_approved'
-        allowNull: false
-  },
-      message: {
-        type: DataTypes.TEXT,
-        allowNull: false
-      },
-      meta: {
-   allowNull: true,
-   type: DataTypes.TEXT,
-   get() {
-     const rawValue = this.getDataValue('meta');
-     return rawValue ? JSON.parse(rawValue) : null;
+const NotificationSchema = new mongoose.Schema(
+  {
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
     },
-     set(value) {
-    this.setDataValue('meta', JSON.stringify(value));
+
+    type: {
+      type: String, 
+      required: true, 
+      // examples: 'application_accepted', 'kyc_approved', 'errand_rejected'
+    },
+
+    message: {
+      type: String,
+      required: true,
+    },
+
+    meta: {
+      type: Object,
+      default: null,
+    },
+
+    isRead: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  {
+    timestamps: true,
   }
-},
-      isRead: {
-        type: DataTypes.BOOLEAN,
-        allowNull: false,
-        defaultValue: false
-      },
-  }, {
-  sequelize,
-  modelName: 'Notifications',
-  tableName: 'Notifications',
-  timestamps: true
-});
+);
+
+const Notification = mongoose.model('Notification', NotificationSchema);
 
 module.exports = Notification;

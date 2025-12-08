@@ -1,32 +1,29 @@
 require('dotenv').config();
 require('./controllers/googleOauthController');
 const express = require('express');
+const mongoose = require('mongoose');
 const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
-const sequelize = require('./database/databases');
 const session = require('express-session');
 const passport = require('passport');
-const schedulePayment = require('./controllers/paymentSchedule');
 
 // Routers
 const userRouter = require('./routes/userRoute');
-const paymentRouter = require('./routes/paymentRoute');
+// const paymentRouter = require('./routes/paymentRoute');
 const kycRouter = require('./routes/kycRoute');
 const errandRouter = require('./routes/errandRoutes');
-const messageRouter = require('./routes/messageRouter');
+// const messageRouter = require('./routes/messageRouter');
 const applicationRouter = require('./routes/applicationRoute');
-const adminRouter = require('./routes/adminRoute');
-const processMondayPayments = require('./routes/schedulepayment');
-
-const refundPayment = require('./routes/refundpayment');
-
-const deliveryProgressRouter = require('./routes/deliveryProgressRouter');
-const dashboardRouter = require('./routes/dashboardRouter');
+// const adminRouter = require('./routes/adminRoute');
+// const processMondayPayments = require('./routes/schedulepayment');
+// const refundPayment = require('./routes/refundpayment');
+// const deliveryProgressRouter = require('./routes/deliveryProgressRouter');
+// const dashboardRouter = require('./routes/dashboardRouter');
 
 
 
-const { initializeIO } = require('./controllers/messageController');
+// const { initializeIO } = require('./controllers/messageController');
 
 const app = express();
 const server = http.createServer(app);
@@ -39,9 +36,9 @@ const io = new Server(server, {
   },
 });
 
-// ✅ Now initialize IO globally for the controller
-initializeIO(io);
-console.log("✅ initializeIO called in server.js");
+// // ✅ Now initialize IO globally for the controller
+// initializeIO(io);
+// console.log("✅ initializeIO called in server.js");
 
 
 // Import modular Socket.IO logic
@@ -75,17 +72,17 @@ app.use(passport.session());
 
 // ---- ROUTES ----
 app.use('/api/v1', userRouter);
-app.use('/api/v1/payment', paymentRouter);
+// app.use('/api/v1/payment', paymentRouter);
 app.use('/api/v1/kyc', kycRouter);
 app.use('/api/v1', errandRouter);
-app.use('/api/v1/messages', messageRouter);
+// app.use('/api/v1/messages', messageRouter);
 app.use('/api/v1', applicationRouter);
-app.use('/api/v1', adminRouter);
-app.use('/api/v1', processMondayPayments);
+// app.use('/api/v1', adminRouter);
+// app.use('/api/v1', processMondayPayments);
 
-app.use('/api/v1',refundPayment);
-app.use('/api/v1/errands', deliveryProgressRouter);
-app.use('/api/v1', dashboardRouter);
+// app.use('/api/v1',refundPayment);
+// app.use('/api/v1/errands', deliveryProgressRouter);
+// app.use('/api/v1', dashboardRouter);
 
 
 
@@ -162,17 +159,14 @@ app.use((err, req, res, next) => {
 
 // ---- START SERVER --
 const PORT = process.env.PORT || 1010;
-const startServer = async () => {
-  try {
-    await sequelize.authenticate();
-    console.log('Connection to database has been established successfully');
+const db = process.env.DATABASE;
+mongoose.connect(db).then(()=> {
+    console.log('Database connection has been established successfully');
+    app.listen(PORT, ()=>{
+    console.log(`Server is running on the PORT: ${PORT}` );  
+})
+}).catch((error=> {
+    console.error(`Error connecting to Database: ${error.message}`);
+}))
 
-    server.listen(PORT, () => {
-      console.log(`Server is running on PORT: ${PORT}`);
-    });
-  } catch (error) {
-    console.error(`Unable to connect to the database: ${error.message}`);
-  }
-};
 
-startServer();

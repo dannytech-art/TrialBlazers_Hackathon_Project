@@ -1,7 +1,10 @@
-const db = require('../models');
-const {RunnerApplication, Errand, User, KYC, Notification } = db
-const { Op } = require('sequelize');
 const { sendMail } = require('../middleware/email');
+const RunnerApplication = require('../models/runnerapplication');
+const Errand = require('../models/errand');
+const KYC = require('../models/kyc');
+const User = require('../models/users');
+const Notification = require('../models/notification')
+
 
 exports.applyForErrand = async (req, res) => {
   try {
@@ -10,18 +13,18 @@ exports.applyForErrand = async (req, res) => {
     const runnerId = req.user.id; 
 
     // Validate Runner Role
-    const user = await User.findByPk(runnerId);
+    const user = await User.findById(runnerId);
     if (user.role !== 'Runner') {
       return res.status(400).json({ message: `Sorry ${user.firstName}, only Runners can apply for errands!` });
     }
 
     // Check KYC
-    const runnerKYC = await KYC.findOne({ where: { userId: runnerId } });
+    const runnerKYC = await KYC.findOne( { userId: runnerId });
     if (!runnerKYC || runnerKYC.status !== 'verified') {
       return res.status(400).json({ message: 'Complete your KYC verification to apply for errands!' });
     }
 
-      const existing = await RunnerApplication.findOne({where: { runnerId, errandId }});
+      const existing = await RunnerApplication.findOne( { runnerId, errandId });
 
     if (existing && existing.status === 'Rejected') {
         return res.status(400).json({
@@ -30,11 +33,11 @@ exports.applyForErrand = async (req, res) => {
   }
 
     // Check Errand Exists
-    const errand = await Errand.findByPk(errandId);
+    const errand = await Errand.findById(errandId);
     if (!errand) return res.status(404).json({ message: 'Errand not found' });
 
     // Prevent Duplicate Application
-    const existingApp = await RunnerApplication.findOne({ where: { runnerId, errandId } });
+    const existingApp = await RunnerApplication.findOne({ runnerId, errandId });
     if (existingApp) {
       return res.status(400).json({ message: 'You have already applied for this errand' });
     }
@@ -106,22 +109,17 @@ exports.applyForErrand = async (req, res) => {
 exports.getErrandApplications = async (req, res) => {
   try {
     const { errandId } = req.params;
-    const errand = await Errand.findByPk(errandId);
+    const errand = await Errand.findById(errandId);
     if (!errand) {
       return res.status(404).json({ message: 'Errand not found' });
     }
 
-    const applications = await RunnerApplication.findAll({
-      where: { errandId },
-      include: [
-
-        {
-          model: User,
-          as: 'runner',
-          attributes: ['id', 'firstName', 'lastName', 'email', 'bio', 'rating', 'totalJobs', ],
-        },
-      ],
-    });
+    const applications = await RunnerApplication.find({ errandId })
+    .populate({
+        path: 'runner',
+        select: "id firstName lastName email bio rating totalJobs"
+    })
+      .sort({ createdAt: -1 });
 
     res.status(200).json({
       message: `Found ${applications.length} applications for this errand`,
@@ -136,83 +134,92 @@ exports.getErrandApplications = async (req, res) => {
 
 exports.updateApplicationStatus = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params; // application ID
     const { status } = req.body;
 
     if (!['Accepted', 'Rejected'].includes(status)) {
       return res.status(400).json({ message: 'Invalid status' });
     }
 
-    const application = await RunnerApplication.findByPk(id);
+    //  Find application
+    const application = await RunnerApplication.findById(id);
     if (!application) {
       return res.status(404).json({ message: 'Application not found' });
     }
 
-    await application.update({ status });
+    // 2. Check if this errand already has an accepted runner
+    const existingAccepted = await RunnerApplication.findOne({
+      errandId: application.errandId,
+      status: 'Accepted'
+    });
+
+    // If client is trying to accept a NEW runner while one is already accepted
+    if (status === 'Accepted' && existingAccepted && existingAccepted._id.toString() !== id) {
+      return res.status(400).json({
+        message: 'This errand already has an accepted runner. You cannot accept another runner.'
+      });
+    }
+
+    // 4. Update status
+    application.status = status;
+    await application.save();
 
     res.status(200).json({
       message: `Application ${status.toLowerCase()} successfully`,
       data: application,
     });
+
   } catch (error) {
     console.error('Error in updateApplicationStatus:', error);
     res.status(500).json({ message: 'Internal Server Error', error: error.message });
   }
 };
 
+
 exports.getRunnerApplications = async (req, res) => {
   try {
     const runnerId = req.user.id;
 
-    const applications = await RunnerApplication.findByPk({
-  where: { runnerId },
-  include: [
-    {
-      model: Errand,
-      as: 'errand',
-      attributes: ['id', 'title', 'description', 'price', 'status', 'userId'],
-      include: [
-        {
-          model: User,
-          as: 'poster',  // this is the user who posted the errand
-          attributes: ['id', 'firstName', 'lastname', 'email'],
-        },
-      ],
-    },
-    {
-      model: User,
-      as: 'runner', // the runner who applied
-      attributes: ['id', 'firstName', 'lastname', 'totalJobs', 'bio'],
-    },
-  ],
-});
+    const applications = await RunnerApplication.find({ runnerId })
+      .populate({
+        path: "errandId",
+        select: "title description price status userId",
+        populate: {
+          path: "userId",
+          select: "firstName lastName email"
+        }
+      })
+      .populate({
+        path: "runnerId",
+        select: "firstName lastName totalJobs bio"
+      })
+      .sort({ createdAt: -1 });
 
     res.status(200).json({
-      message: 'Fetched runner applications successfully',
+      message: "Fetched runner applications successfully",
       data: applications
     });
   } catch (error) {
-    console.error('Error in getRunnerApplications:', error);
-    res.status(500).json({ message: 'Internal Server Error', error: error.message });
+    console.error("Error in getRunnerApplications:", error);
+    res.status(500).json({
+      message: "Internal Server Error",
+      error: error.message
+    });
   }
 };
+
 
 exports.getErrandApplicationsForArunner = async (req, res) => {
   try {
     const { errandId } = req.params;
     const {runnerId} = req.params;
-    const errand = await Errand.findByPk(errandId);
-    const applications = await RunnerApplication.findAll({
-      where: { errandId, runnerId },
-      include: [
-        
-        {
-          model: User,
-          as: 'runner',
-          attributes: ['id', 'firstName', 'lastName', 'email', 'bio', 'rating', 'totalJobs', ],
-        },
-      ],
-    });
+    const errand = await Errand.findById(errandId);
+    const applications = await RunnerApplication.find({ errandId, runnerId })
+    .populate({
+        path: 'runner',
+        select: "id firstName lastName email bio rating totalJobs"
+    })
+    .sort({ createdAt: -1});
 
     res.status(200).json({
       message: `Found ${applications.length} applications for this errand`,
@@ -228,74 +235,100 @@ exports.getErrandApplicationsForArunner = async (req, res) => {
 exports.acceptRunnerApplication = async (req, res) => {
   try {
     const { errandId, applicationId } = req.params;
-    console.log(req.user)
-    const clientId = req.user.id; 
+    const clientId = req.user.id;
 
-    // Fetch the errand and verify the client owns it
-    const errand = await Errand.findByPk(errandId);
-    if (!errand) return res.status(404).json({ message: 'Errand not found' });
-    if (errand.userId !== clientId)
-      return res.status(403).json({ message: 'You are not authorized to accept applications for this errand' });
-
-    // Get the selected runner application
-     const application = await RunnerApplication.findByPk(applicationId);
-     let errandData = errand.toJSON();
-
-    // const application = await RunnerApplication.findOne({
-    //   where: { errandId: id }
-    // });
-
-    // Add computed price
-
-    console.log('application price: ', application);
-    console.log('application bid price: ', application.bidPrice);
-    console.log('application current price: ', application.currentPrice);
-
+    // Fetch errand
+    const errand = await Errand.findById(errandId);
+    if (!errand) return res.status(404).json({ message: "Errand not found" });
     
-    let finalprice = application
-      ? (application.bidPrice || application.currentPrice)
-      : null;
-   await  errand.update({price:finalprice})
+    // Make sure client owns the errand
+    if (String(errand.userId) !== String(clientId)) {
+    return res.status(403).json({ message: "You are not authorized to accept applications for this errand" });
+}
+    // PREVENT accepting more than one runner
+    if (errand.assignedTo) {
+      return res.status(400).json({
+        message: "You have already accepted a runner for this errand. You cannot accept another."
+      });
+    }
 
-    if (!application || application.errandId !== errandId)
-      return res.status(404).json({ message: 'Application not found for this errand' });
+    // Fetch the application
+    const application = await RunnerApplication.findById(applicationId);
+    if (!application) return res.status(404).json({ message: "Application not found" });
 
-    // Update selected application
-    await application.update({ status: 'Accepted' });
+    if (application.errandId.toString() !== errandId)
+      return res.status(404).json({ message: "Application does not belong to this errand" });
 
-    // Reject all other applications for this errand
-    await RunnerApplication.update(
-      { status: 'Rejected' },
-      { where: { errandId, id: { [Op.ne]: applicationId } } }
-    );
+    // Determine final errand price
+    const finalPrice = application.bidPrice || application.currentPrice;
+
+    // Update Errand price
+    errand.price = finalPrice;
+
+    // Generate OTPs
     const startOTP = Math.floor(1000 + Math.random() * 9000).toString();
     const deliveryOTP = Math.floor(1000 + Math.random() * 9000).toString();
 
-    // Assign the errand to this runner
-    await errand.update({ assignedTo: application.runnerId, status: 'Assigned', startOTP, deliveryOTP, startOTPExpires: null, deliveryOTPExpires: null });
+    // Assign errand
+    errand.assignedTo = application.runnerId;
+    errand.status = "Assigned";
+    errand.startOTP = startOTP;
+    errand.deliveryOTP = deliveryOTP;
+    errand.startOTPExpires = null;
+    errand.deliveryOTPExpires = null;
+    await errand.save();
 
-     const notification = await Notification.create({
+    // Mark this application as accepted
+    application.status = "Accepted";
+    await application.save();
+
+    // Reject all other applications
+    await RunnerApplication.updateMany(
+      {
+        errandId,
+        _id: { $ne: applicationId }
+      },
+      { $set: { status: "Rejected" } }
+    );
+
+    // Create notification
+    await Notification.create({
       userId: application.runnerId,
-      type: 'application_accepted',
+      type: "application_accepted",
       message: `Your application for "${errand.title}" has been accepted.`,
-      meta: { errandId: errand.id, applicationId: application.id, startOTP, deliveryOTP }
+      meta: {
+        errandId: errand._id,
+        applicationId: application._id,
+        startOTP,
+        deliveryOTP
+      }
     });
-  
-    const client = await User.findByPk(clientId);
+
+    const client = await User.findById(clientId);
     if (client?.email) {
-      // call your sendMail function or Brevo wrapper
-      await sendMail(client.email, 'Errand Accepted', `<p>Your posted errand "${errand.title}" was accepted.</p><p>Start OTP: ${startOTP}</p> and <p>Delivery OTP: ${deliveryOTP}</p>`);
+      await sendMail(
+        client.email,
+        "Errand Accepted",
+        `<p>Your errand "${errand.title}" has been accepted.</p>
+         <p>Start OTP: ${startOTP}</p>
+         <p>Delivery OTP: ${deliveryOTP}</p>`
+      );
     }
+
     return res.status(200).json({
-      message: 'Runner application accepted successfully',
+      message: "Runner application accepted successfully",
       data: {
         acceptedApplication: application,
-        errand,
-      },
+        errand
+      }
     });
+
   } catch (error) {
-    console.error('Error in acceptRunnerApplication:', error);
-    return res.status(500).json({ message: 'Internal Server Error', error: error.message });
+    console.error("Error in acceptRunnerApplication:", error);
+    return res.status(500).json({
+      message: "Internal Server Error",
+      error: error.message
+    });
   }
 };
 
@@ -305,21 +338,23 @@ exports.getNotifications = async (req, res) => {
 
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 20;
-    const offset = (page - 1) * limit;
+    const skip = (page - 1) * limit;
 
-    const { count, rows } = await Notification.findAndCountAll({
-      where: { userId },
-      order: [['createdAt', 'DESC']],
-      limit,
-      offset
-    });
+    // Count total notifications
+    const total = await Notification.countDocuments({ userId });
+
+    // Fetch notifications
+    const notifications = await Notification.find({ userId })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
 
     return res.status(200).json({
       success: true,
-      total: count,
+      total,
       currentPage: page,
-      totalPages: Math.ceil(count / limit),
-      notifications: rows,
+      totalPages: Math.ceil(total / limit),
+      notifications,
     });
 
   } catch (error) {
@@ -328,20 +363,23 @@ exports.getNotifications = async (req, res) => {
   }
 };
 
+
 exports.markNotificationAsRead = async (req, res) => {
   try {
     const { notificationId } = req.params;
     const userId = req.user.id;
 
     const notification = await Notification.findOne({
-      where: { id: notificationId, userId }
+      _id: notificationId,
+      userId
     });
 
     if (!notification) {
       return res.status(404).json({ message: "Notification not found" });
     }
 
-    await notification.update({ isRead: true });
+    notification.isRead = true;
+    await notification.save();
 
     return res.status(200).json({
       message: "Notification marked as read",
@@ -354,16 +392,19 @@ exports.markNotificationAsRead = async (req, res) => {
   }
 };
 
+
 exports.markAllAsRead = async (req, res) => {
   try {
     const userId = req.user.id;
 
-    await Notification.update(
-      { isRead: true },
-      { where: { userId, isRead: false } }
+    await Notification.updateMany(
+      { userId, isRead: false },
+      { $set: { isRead: true } }
     );
 
-    return res.status(200).json({ message: "All notifications marked as read" });
+    return res.status(200).json({
+      message: "All notifications marked as read"
+    });
 
   } catch (error) {
     console.error("Error marking all notifications:", error);
@@ -376,50 +417,56 @@ exports.rejectRunnerApplication = async (req, res) => {
     const { errandId, applicationId } = req.params;
     const clientId = req.user.id;
 
-    // Verify the errand exists and belongs to the client
-    const errand = await Errand.findByPk(errandId);
-    if (!errand) return res.status(404).json({ message: 'Errand not found' });
-    if (errand.userId !== clientId)
-      return res.status(403).json({ message: 'You are not authorized to reject applications for this errand' });
+    // 1. Verify errand exists & belongs to client
+    const errand = await Errand.findById(errandId);
+    if (!errand)
+      return res.status(404).json({ message: "Errand not found" });
 
-    // Verify the application exists and belongs to this errand
-    const application = await RunnerApplication.findByPk(applicationId);
-    if (!application || application.errandId !== errandId)
-      return res.status(404).json({ message: 'Runner application not found for this errand' });
+    if (String(errand.userId) !== String(clientId))
+      return res.status(403).json({ message: "You are not authorized to reject applications for this errand" });
 
-    // Update application status to 'Rejected'
-    await application.update({ status: 'Rejected' });
+    // 2. Verify application exists and belongs to this errand
+    const application = await RunnerApplication.findById(applicationId);
+    if (!application || String(application.errandId) !== String(errandId))
+      return res.status(404).json({ message: "Runner application not found for this errand" });
 
-    // Re-open errand if no pending applications remain
-    const remaining = await RunnerApplication.count({
-      where: { errandId, status: 'Pending' },
+    // 3. Mark application as rejected
+    application.status = "Rejected";
+    await application.save();
+
+    // 4. Check if any pending applications remain
+    const remaining = await RunnerApplication.countDocuments({
+      errandId,
+      status: "Pending"
     });
 
     if (remaining === 0) {
-      await errand.update({ status: 'Open' });
+      errand.status = "Open";
+      await errand.save();
     }
 
-    // 🔔 Send rejection notification to runner
+    // 5. Send notification to runner
     await Notification.create({
       userId: application.runnerId,
-      type: 'application_rejected',
+      type: "application_rejected",
       title: "Application Rejected",
       message: `Your application for the errand "${errand.title}" was rejected by the client.`,
       isRead: false,
     });
-    await application.destroy(applicationId);
+
+    // 6. Delete application completely (Mongoose version)
+    await RunnerApplication.findByIdAndDelete(applicationId);
 
     return res.status(200).json({
-      message: 'Runner application rejected successfully',
-      data: {
-        rejectedApplication: application,
-      },
+      message: "Runner application rejected successfully",
+      data: { rejectedApplication: application }
     });
+
   } catch (error) {
-    console.error('Error rejecting runner application:', error);
+    console.error("Error rejecting runner application:", error);
     res.status(500).json({
-      message: 'Internal server error',
-      error: error.message,
+      message: "Internal server error",
+      error: error.message
     });
   }
 };

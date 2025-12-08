@@ -1,4 +1,3 @@
-
 const watermark = 'https://res.cloudinary.com/dbzzkaa97/image/upload/v1754353355/watermark_fdbzah.png';
 const logo = 'https://res.cloudinary.com/dwzomhflw/image/upload/v1761053102/Logo_u0oe0f.jpg';
 const linkedIn = 'https://res.cloudinary.com/dbzzkaa97/image/upload/v1754433533/linkedIn_ggxxm4.png';

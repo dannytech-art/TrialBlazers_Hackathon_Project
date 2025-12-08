@@ -1,39 +1,29 @@
-const { Sequelize, DataTypes, Model } = require('sequelize');
-const sequelize = require('../database/databases')
+const mongoose = require("mongoose");
 
-class Message extends Model {}
-
-Message.init(
+const MessageSchema = new mongoose.Schema(
   {
-    id: {
-        allowNull: false,
-        primaryKey: true,
-        type: DataTypes.UUID,
-        defaultValue: DataTypes.UUIDV4
-      },
-      senderId: {
-        type: DataTypes.STRING,
-        allowNull: false
-      },
-      receiverId: {
-        type: DataTypes.STRING,
-        allowNull: false
-      },
-      roomId: {
-        type: DataTypes.STRING,
-        allowNull: true
-      },
-      text: {
-        type: DataTypes.STRING,
-        allowNull: false
-      },
+    senderId: {
+      type: String,
+      required: true,
+    },
+    receiverId: {
+      type: String,
+      required: true,
+    },
+    roomId: {
+      type: String,
+      default: null,
+    },
+    text: {
+      type: String,
+      required: true,
+    },
   },
   {
-    // Other model options go here
-    sequelize, // We need to pass the connection instance
-    modelName: 'Messages', // We need to choose the model name
-    timestamps: true
-  },
+    timestamps: true, // automatically creates createdAt & updatedAt
+  }
 );
+
+const Message = mongoose.model("Message", MessageSchema);
 
 module.exports = Message;

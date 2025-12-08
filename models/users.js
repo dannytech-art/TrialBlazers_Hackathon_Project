@@ -1,107 +1,105 @@
-const { Sequelize, DataTypes, Model, BOOLEAN } = require('sequelize');
-const sequelize = require('../database/databases');
+const mongoose = require('mongoose');
 
-
-class User extends Model {}
-
-User.init(
+const UserSchema = new mongoose.Schema(
   {
-    id: {
-        allowNull: false,
-        primaryKey: true,
-        type: DataTypes.UUID,
-        defaultValue: DataTypes.UUIDV4
-      },
-      firstName: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        trim: true,
-      },
-      lastName: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        trim: true 
-      },
-      email: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        unique: true,
-        lowerCase: true,
-        trim: true
-      },
-      password: {
-        type: DataTypes.STRING,
-        allowNull: false
-      },
-      role:{
-        type: DataTypes.ENUM('Client', 'Runner'),
-        allowNull: false
-      },
-      bio: {
-        type: DataTypes.TEXT,
-        allowNull: true,
-      },
-      kycStatus: {
-        type: DataTypes.ENUM('Not completed', 'pending', 'approved', 'rejected', 'verified'),
-        allowNull: false,
-        defaultValue: 'Not completed',
-      },
-      otp:{
-        type: DataTypes.STRING
-      },
-      otpExpiredAt: {
-        type: DataTypes.DATE
-      },
-      isVerified:{
-        type: DataTypes.BOOLEAN,
-        defaultValue: false
-      },
-      rating: {
-        type: DataTypes.FLOAT,
-        defaultValue: 0
-      },
-      totalJobs: {
-        type: DataTypes.INTEGER,
-        defaultValue: 0
-      },
-      isActive: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: true
-      },
-      otpVerified: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: false
-      },
-      token: {
-        type: DataTypes.STRING,
-        defaultValue: ''
-      },
-      profileImage: {
-        type: DataTypes.TEXT,
-        allowNull: true,
-         get() {
-         const rawValue = this.getDataValue('profileImage');
-         return rawValue ? JSON.parse(rawValue) : null;
-       },
-        set(value) {
-       this.setDataValue('profileImage', JSON.stringify(value));
-       }
-      },
+    firstName: {
+      type: String,
+      required: true,
+      trim: true,
     },
-    {
-      sequelize, 
-    modelName: 'Users', 
-    timestamps: true
+
+    lastName: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+      lowercase: true,
+    },
+
+    password: {
+      type: String,
+      required: true,
+    },
+
+    role: {
+      type: String,
+      enum: ['Client', 'Runner'],
+      required: true,
+    },
+
+    bio: {
+      type: String,
+      default: null,
+    },
+
+    kycStatus: {
+      type: String,
+      enum: ['Not completed', 'Pending', 'Approved', 'Rejected', 'Verified'],
+      default: 'Not completed',
+    },
+
+    otp: {
+      type: String,
+    },
+
+    otpExpiredAt: {
+      type: Date,
+    },
+
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
+
+    rating: {
+      type: Number,
+      default: 0,
+    },
+
+    totalJobs: {
+      type: Number,
+      default: 0,
+    },
+
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+
+    otpVerified: {
+      type: Boolean,
+      default: false,
+    },
+
+    token: {
+      type: String,
+      default: '',
+    },
+
+    profileImage: {
+      type: mongoose.Schema.Types.Mixed,
+      default: null,
+    },
   },
+
+  { timestamps: true }
 );
-User.associate = (models) => {
-  // A user (runner) can have many applications
-  User.hasMany(models.RunnerApplication, {
-    foreignKey: 'runnerId',
-    as: 'applications',
-  });
-};
 
+// If you want getter/setter behavior similar to sequelize:
+UserSchema.path('profileImage').get(function (value) {
+  return value ? value : null;
+});
 
+UserSchema.path('profileImage').set(function (value) {
+  return value;
+});
+
+const User = mongoose.model('User', UserSchema);
 
 module.exports = User;

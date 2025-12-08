@@ -1,46 +1,38 @@
-const { Sequelize, DataTypes, Model } = require('sequelize');
-const sequelize = require('../database/databases')
+const mongoose = require("mongoose");
 
-class Review extends Model {}
-
-Review.init(
+const ReviewSchema = new mongoose.Schema(
   {
-    id: {
-        allowNull: false,
-        primaryKey: true,
-        type: DataTypes.UUID,
-        defaultValue: DataTypes.UUIDV4
-      },
-      errandId: {
-        type: DataTypes.UUID,
-        references: {model: 'Errands', key: 'id'}
-      },
-      reviewerId: {
-        type: DataTypes.UUID,
-        references: {model: 'Users', key: 'id'}
-      },
-      revieweeId: {
-        type: DataTypes.UUID,
-        references: {model: 'Users', key: 'id'}
-      },
-      rating: {
-        type: DataTypes.INTEGER,
-        allowNull: false
-      },
-      createdAt: {
-        allowNull: false,
-        type: DataTypes.DATE
-      },
-      updatedAt: {
-        allowNull: false,
-        type: DataTypes.DATE
-      }
+    errandId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Errand",
+      required: true,
+    },
+
+    reviewerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+
+    revieweeId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+
+    rating: {
+      type: Number,
+      required: true,
+    },
   },
   {
-    sequelize, 
-    modelName: 'Reviews', 
-    timestamps: true
-  },
+    timestamps: true, // creates createdAt & updatedAt automatically
+  }
 );
 
-module.exports = Review;
+// Ensure "id" behaves as a primary key alternative
+ReviewSchema.index({ id: 1 }, { unique: true });
+
+const Review = mongoose.model("Review", ReviewSchema);
+
+module.exports = Review
