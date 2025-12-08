@@ -1,118 +1,104 @@
-const { Sequelize, DataTypes, Model } = require('sequelize');
-const sequelize = require('../database/databases');
-const User = require('./users');
+const mongoose = require('mongoose');
 
-class Errand extends Model {}
-
-Errand.init(
+const ErrandSchema = new mongoose.Schema(
   {
-    id: {
-      allowNull: false,
-      primaryKey: true,
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
-    },
     userId: {
-      type: DataTypes.UUID,
-      allowNull: false,
-      references: { model: 'Users', key: 'id' },
-      onDelete: 'CASCADE',
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
     },
+
     title: {
-      type: DataTypes.STRING,
-      allowNull: false,
+      type: String,
+      required: true,
     },
+
     description: {
-      type: DataTypes.TEXT,
-      allowNull: false,
+      type: String,
+      required: true,
     },
+
     pickupAddress: {
-      type: DataTypes.TEXT,
-      allowNull: false,
+      type: String,
+      required: true,
     },
+
     deliveryAddress: {
-      type: DataTypes.TEXT,
-      allowNull: false,
+      type: String,
+      required: true,
     },
+
     pickupContact: {
-      type: DataTypes.TEXT,
-      allowNull: false,
+      type: String,
+      required: true,
     },
+
     price: {
-      type: DataTypes.FLOAT,
-      allowNull: false,
+      type: Number,
+      required: true,
     },
+
     status: {
-      type: DataTypes.ENUM('Open', 'Assigned', 'Completed', 'Cancelled'),
-      defaultValue: 'Open',
-      allowNull: false,
+      type: String,
+      enum: ['Open', 'Assigned', 'Completed', 'Cancelled'],
+      default: 'Open',
     },
-      paymentStatus: {
-      type: DataTypes.ENUM('pending', 'paid', 'failed'),
-      defaultValue: 'pending',
+
+    paymentStatus: {
+      type: String,
+      enum: ['pending', 'paid', 'failed'],
+      default: 'pending',
     },
+
     assignedTo: {
-      type: DataTypes.UUID,
-      references: { model: 'Users', key: 'id' },
-      allowNull: true,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
     },
+
     startOTP: {
-      type: DataTypes.STRING,
+      type: String,
     },
+
     deliveryOTP: {
-      type: DataTypes.STRING,
+      type: String,
     },
+
     startOTPExpires: {
-      type: DataTypes.STRING,
+      type: Date,
     },
+
     deliveryOTPExpires: {
-      type: DataTypes.STRING,
+      type: Date,
     },
+
     attachments: {
-      type: DataTypes.TEXT,
-      allowNull: true,
-      get() {
-        const rawValue = this.getDataValue('attachments');
-        return rawValue ? JSON.parse(rawValue) : null;
-      },
-      set(value) {
-        this.setDataValue('attachments', JSON.stringify(value));
-      },
+      type: mongoose.Schema.Types.Mixed,
+      default: null,
     },
-    orderAssignedAt: {
-  type: DataTypes.DATE,
-  allowNull: true,
-},
-headingToPickupAt: {
-  type: DataTypes.DATE,
-  allowNull: true,
-},
-arrivedAtPickupAt: {
-  type: DataTypes.DATE,
-  allowNull: true,
-},
-itemPickedAt: {
-  type: DataTypes.DATE,
-  allowNull: true,
-},
-headingToDeliveryAt: {
-  type: DataTypes.DATE,
-  allowNull: true,
-},
-arrivedAtDeliveryAt: {
-  type: DataTypes.DATE,
-  allowNull: true,
-},
-deliveredConfirmedAt: {
-  type: DataTypes.DATE,
-  allowNull: true,
-},
+
+    // Timeline timestamps
+    orderAssignedAt: { type: Date },
+    headingToPickupAt: { type: Date },
+    arrivedAtPickupAt: { type: Date },
+    itemPickedAt: { type: Date },
+    headingToDeliveryAt: { type: Date },
+    arrivedAtDeliveryAt: { type: Date },
+    deliveredConfirmedAt: { type: Date },
   },
-  {
-    sequelize,
-    modelName: 'Errands',
-    timestamps: true,
-  }
+
+  { timestamps: true }
 );
+
+// Optional getter/setter for attachments:
+ErrandSchema.path('attachments').get(function (value) {
+  return value || null;
+});
+
+ErrandSchema.path('attachments').set(function (value) {
+  return value;
+});
+
+const Errand = mongoose.model('Errand', ErrandSchema);
 
 module.exports = Errand;

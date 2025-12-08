@@ -11,14 +11,14 @@ exports.authenticated = async (req, res, next) => {
             })
         }
         const decoded = await jwt.verify(token, process.env.JWT_SECRET_KEY);
-        const user = await userModel.findByPk(decoded.id);
+        const user = await userModel.findById(decoded.id);
 
 
         if (!user) {
             return res.status(401).json({ message: 'User not found' });
             }
       req.user = {
-      id: user.id,
+      id: user._id,
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.email,
@@ -49,15 +49,14 @@ exports.isAdmin =  async (req, res,next) => {
             })
         }
         const decoded = await jwt.verify(token, process.env.JWT_SECRET_KEY);
-        const admin = await Admin.findByPk(decoded.id);
+        const admin = await Admin.findById(decoded.id);
 
         if (!admin) {
             return res.status(401).json({ message: 'You are not authorized to perform this action!' });
             }
       req.admin = {
-      id: admin.id,
+      id: admin._id,
       email: admin.email,
-      role: admin.role
     };
 
     next();

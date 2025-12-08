@@ -1,7 +1,8 @@
-const cloudinary = require('../config/cloudinary')
 const fs = require('fs');
-const db = require('../models');
-const {KYC, User} = db
+const KYC = require('../models/kyc');
+const User = require('../models/users');
+const cloudinary = require('../config/cloudinary');
+
 
 exports.submitKYC = async (req, res) => {
   try {
@@ -12,7 +13,7 @@ exports.submitKYC = async (req, res) => {
       return res.status(400).json({ message: 'All three documents are required' });
     }
     
-    const existingKYC = await KYC.findOne({ where: { userId } });
+    const existingKYC = await KYC.findOne({ userId });
     if (existingKYC) {
       return res.status(400).json({ message: 'KYC already submitted for this user' });
     }
@@ -53,7 +54,7 @@ exports.submitKYC = async (req, res) => {
 exports.getMyKYC = async (req, res) => {
   try {
     const userId = req.user.id;
-    const kyc = await KYC.findOne({ where: { userId } });
+    const kyc = await KYC.findOne( { userId });
 
     if (!kyc) {
       return res.status(404).json({ message: 'KYC not found' });
@@ -71,10 +72,12 @@ exports.getMyKYC = async (req, res) => {
 // Admin Get All KYC Submissions 
 exports.getAllKYC = async (req, res) => {
   try {
-    const kycs = await KYC.findAll({
-      include: [{ model: User, as: 'user', attributes: ['id', 'firstName', 'lastName', 'email'] }],
-      order: [['createdAt', 'DESC']],
-    });
+    const kycs = await KYC.find()
+      .populate({
+        path: 'user',
+        select: 'id firstName lastName email'
+      })
+      .sort({ createdAt: -1 }); // DESC
 
     res.status(200).json({
       message: 'Fetched all KYC submissions successfully',
@@ -89,28 +92,40 @@ exports.getAllKYC = async (req, res) => {
 exports.updateKYCStatus = async (req, res) => {
   try {
     const { id } = req.params;
-    const { status } = req.body; 
+    const { status } = req.body;
 
+    // Validate status
     if (!['approved', 'rejected', 'verified'].includes(status)) {
       return res.status(400).json({ message: 'Invalid KYC status' });
     }
-  
-    const kyc = await KYC.findByPk(id);
+
+    // Find KYC by ID
+    const kyc = await KYC.findById(id);
     if (!kyc) {
       return res.status(404).json({ message: 'KYC not found' });
     }
 
-    const updateKYC = {
-      kycStatus: "verified"
+    // Update KYC
+    kyc.status = status;
+    kyc.reviewedBy = req.admin.id;
+    await kyc.save();
+
+    // Update User (if needed)
+    if (status === "verified") {
+      await User.findByIdAndUpdate(
+        kyc.userId,
+        { kycStatus: "verified" },
+        { new: true }
+      );
     }
-    await kyc.update({ status, reviewedBy: req.admin.id });
-    await User.update(updateKYC, {where: {id: kyc.userId}})
 
     res.status(200).json({
       message: `KYC ${status} successfully`,
       data: kyc,
     });
+
   } catch (error) {
     res.status(500).json({ message: 'Internal Server Error', error: error.message });
   }
 };
+

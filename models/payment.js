@@ -1,61 +1,51 @@
-const { Sequelize, DataTypes, Model } = require('sequelize');
-const sequelize = require('../database/databases')
+const mongoose = require('mongoose');
 
-class Payment extends Model {}
-
-Payment.init(
+const PaymentSchema = new mongoose.Schema(
   {
-     id: {
-        allowNull: false,
-        primaryKey: true,
-        type: DataTypes.UUID,
-        defaultValue: DataTypes.UUIDV4
-      },
-      errandId: {
-    type: DataTypes.UUID,
-    allowNull: true,
-    references: { model: 'Errands', key: 'id' }
-},
+    errandId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Errand",
+      default: null,
+    },
 
-      payerId: {
-        type: DataTypes.UUID,
-        references: {model: 'Users', key: 'id'}
-      },
-      receiverId: {
-        type: DataTypes.UUID,
-        references: {model: 'Users', key: 'id'}
-      },
-      amount: {
-        type: DataTypes.FLOAT,
-        allowNull: false
-      },
-       description: {
-       type: DataTypes.TEXT
-      },
-      transactionId: {
-        type: DataTypes.STRING
-      },
-      paymentStatus: {
-        type: DataTypes.ENUM('Pending', 'Paid', 'Failed'),
-        defaultValue: 'Pending'
-      },
-      paymentMethod: {
-         type: DataTypes.STRING,
-      },
-      createdAt: {
-        allowNull: false,
-        type: DataTypes.DATE
-      },
-      updatedAt: {
-        allowNull: false,
-        type: DataTypes.DATE
-      }
+    payerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+
+    receiverId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+
+    amount: {
+      type: Number,
+      required: true,
+    },
+
+    description: {
+      type: String,
+      required: true
+    },
+
+    transactionId: {
+      type: String,
+    },
+
+    paymentStatus: {
+      type: String,
+      enum: ["Pending", "Paid", "Failed"],
+      default: "Pending",
+    },
+
+    paymentMethod: {
+      type: String,
+    },
   },
-  {
-    sequelize, 
-    modelName: 'Payments', 
-    timestamps: true
-  },
+  { timestamps: true }
 );
+const Payment =  mongoose.model("Payment", PaymentSchema);
 
-module.exports = Payment;
+module.exports = Payment

@@ -1,60 +1,42 @@
-const { Sequelize, DataTypes, Model } = require('sequelize');
-const sequelize = require('../database/databases');
-const User = require('./users');
-const Errand = require('./errand');
+const mongoose = require('mongoose');
 
-class RunnerApplication extends Model {}
-
-RunnerApplication.init(
+const RunnerApplicationSchema = new mongoose.Schema(
   {
-    id: {
-      primaryKey: true,
-      allowNull: false,
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
-    },
     runnerId: {
-      type: DataTypes.UUID,
-      allowNull: false,
-      references: {
-        model: 'Users', // References Users table
-        key: 'id',
-      },
-      onUpdate: 'CASCADE',
-      onDelete: 'CASCADE',
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
     },
+
     errandId: {
-      type: DataTypes.UUID,
-      allowNull: false,
-      references: {
-        model: 'Errands', // References Errands table
-        key: 'id',
-      },
-      onUpdate: 'CASCADE',
-      onDelete: 'CASCADE',
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Errand',
+      required: true,
     },
+
     status: {
-      type: DataTypes.ENUM('Pending', 'Accepted', 'Rejected'),
-      allowNull: false,
-      defaultValue: 'Pending',
+      type: String,
+      enum: ['Pending', 'Accepted', 'Rejected'],
+      default: 'Pending',
     },
+
     bidPrice: {
-        type: DataTypes.FLOAT,
-        allowNull: true,
-      },
+      type: Number,
+      default: null,
+    },
+
     currentPrice: {
-      type: DataTypes.FLOAT,
-        allowNull: true,
-    }
+      type: Number,
+      default: null,
+    },
   },
   {
-    sequelize,
-    modelName: 'runnerapplication',
-    tableName: 'runnerapplications',
     timestamps: true,
   }
 );
 
 
+
+const RunnerApplication = mongoose.model('RunnerApplication', RunnerApplicationSchema);
 
 module.exports = RunnerApplication;

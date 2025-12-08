@@ -10,11 +10,10 @@ const { forgotHtml } = require('../middleware/forgotMail');
 const { generateToken, toTitleCase } = require('../utils/extras');
 
 
-
 exports.register = async (req, res) => {
     try {
         const { firstName, lastName, email, password, confirmPassword, role } = req.body;
-        const existingEmail = await userModel.findOne({ where: {email: email.toLowerCase().trim()} });
+        const existingEmail = await userModel.findOne({email: email.toLowerCase().trim()});
 
         if (password !== confirmPassword) {
       return res.status(400).json({ message: 'Passwords do not match' });
@@ -52,13 +51,13 @@ exports.register = async (req, res) => {
             firstNameCase,
             lastNameCase,
             email: email.toLowerCase().trim(),
-            role
+            role,
+            token
         }
         res.status(201).json({
             message: "User registered successfully",
             verify_account: `Enter the OTP sent to ${user.email} for Email verification`,
-            data: newUser,
-            token
+            data: newUser
         })
     } catch (error) {
         console.log(error)
@@ -72,7 +71,7 @@ exports.register = async (req, res) => {
 exports.verifyEmail = async (req, res) => {
   try {
     const { otp, email } = req.body;
-    const user = await userModel.findOne({ where: {email: email.toLowerCase().trim()} });
+    const user = await userModel.findOne({email: email.toLowerCase().trim()});
 
     if (!user) {
       return res.status(404).json({
@@ -89,13 +88,12 @@ exports.verifyEmail = async (req, res) => {
       return res.status(400).json({ message: "Invalid OTP" });
    }
 
-    const updateUser = {
-    isVerified: true,
-    otp: null,
-    otpExpiredAt: null,
-    }
+   user.isVerified = true;
+   user.otp = null;
+   user.otpExpiredAt = null;
 
-    await userModel.update(updateUser, {where: {email: email}})
+    await user.save()
+
     res.status(200).json({
       message: "User verified successfully",
     });
@@ -109,20 +107,18 @@ exports.verifyEmail = async (req, res) => {
 exports.resendCode = async (req, res) => {
   try {
     const { email } = req.body;
-    const user = await userModel.findOne({ where: {email: email.toLowerCase().trim() }});
+    const user = await userModel.findOne({email: email.toLowerCase().trim() });
 
     if (!user) {
       return res.status(404).json({
         message: "user not found",
       });
     }
-
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const resendOtp = {
-         otp: otp, 
-         otpExpiredAt: Date.now() + 1000 * 300
-    }
-    await userModel.update(resendOtp, {where: {email: email.toLowerCase().trim()}});
+    user.otp = otp;
+    user.otpExpiredAt = Date.now() + 1000 * 300
+    
+    await user.save();
 
     const subject = "Email Verification Code Resent";
      await sendMail(email, subject, registerOTP(otp, user.firstName));
@@ -141,7 +137,7 @@ exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const checkUser = await userModel.findOne({ where: { email: email.toLowerCase().trim() } });
+    const checkUser = await userModel.findOne({ email: email.toLowerCase().trim() });
     
     if (!checkUser) {
       return res.status(400).json({ message: "Invalid credentials" });
@@ -156,10 +152,16 @@ exports.login = async (req, res) => {
       return res.status(400).json({
         message: `This email ${checkUser.email} is not verified yet`,
       });
-    }
-    
+    };
+
+     const token = jwt.sign(
+      { id: checkUser._id },
+      process.env.JWT_SECRET_KEY,
+      { expiresIn: "1d" }
+    );
+
     const newUser = {
-      id: checkUser.id,
+      id: checkUser._id,
       firstName: checkUser.firstName,
       lastName: checkUser.lastName,
       email: checkUser.email,
@@ -172,19 +174,14 @@ exports.login = async (req, res) => {
       totalJobs: checkUser.totalJobs,
       isActive: checkUser.isActive,
       createdAt: checkUser.createdAt,
-      updatedAt: checkUser.updatedAt
+      updatedAt: checkUser.updatedAt,
+      token: token
     };
 
-    const token = jwt.sign(
-      { id: checkUser.id },
-      process.env.JWT_SECRET_KEY,
-      { expiresIn: "1d" }
-    );
-
+   
     res.status(200).json({
       message: "Login successful",
       data: newUser,
-      token,
     });
   } catch (error) {
     console.log(error.message);
@@ -198,7 +195,7 @@ exports.login = async (req, res) => {
 exports.forgotPassword = async (req, res) => {
     try {
         const {email} = req.body;
-        const checkEmail = await userModel.findOne({where: {email: email.toLowerCase().trim()}});
+        const checkEmail = await userModel.findOne( {email: email.toLowerCase().trim()});
       
         if(!checkEmail){
             return res.status(400).json({
@@ -206,11 +203,10 @@ exports.forgotPassword = async (req, res) => {
         };
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
         
-        const forgotOtp = {
-         otp: otp, 
-         otpExpiredAt: Date.now() + 1000 * 300
-         }
-         await userModel.update(forgotOtp, {where: {email: email.toLowerCase().trim()}});
+        checkEmail.otp = otp;
+        checkEmail.otpExpiredAt = Date.now() + 1000 * 300 
+
+         await checkEmail.save();
 
         const subject = 'Reset Password';
         await sendMail(checkEmail.email, subject, forgotHtml(otp, checkEmail.firstName));
@@ -233,7 +229,7 @@ exports.verifyResetPasswordOtp = async (req, res) => {
     if (!email || !otp) {
       return res.status(400).json({ message: "Email and OTP are required" });
     }
-    const user = await userModel.findOne({ where: { email: email.toLowerCase().trim() } });
+    const user = await userModel.findOne({ email: email.toLowerCase().trim() });
     if (!user) return res.status(404).json({ message: 'User not found' });
 
     if (Date.now() > new Date(user.otpExpiredAt).getTime())
@@ -242,8 +238,11 @@ exports.verifyResetPasswordOtp = async (req, res) => {
     if (String(otp).trim() !== String(user.otp).trim()) {
       return res.status(400).json({ message: "Invalid OTP" });
    }
+    user.otpVerified = true;
+    user.otp = null;
+    user.otpExpiredAt = null;
 
-    await user.update({ otpVerified: true, otp: null, otpExpiredAt: null});
+    await user.save();
 
     res.status(200).json({ message: 'OTP verified successfully!' });
   } catch (error) {
@@ -252,33 +251,49 @@ exports.verifyResetPasswordOtp = async (req, res) => {
 };
 
 exports.resetPassword = async (req, res) => {
-    try {
-        const {email, newPassword, confirmPassword} = req.body;
-        if (!email || !newPassword || !confirmPassword) {
+  try {
+    const { email, newPassword, confirmPassword } = req.body;
+
+    if (!email || !newPassword || !confirmPassword) {
       return res.status(400).json({ message: "All fields are required" });
     }
-        if(newPassword !== confirmPassword) {
-            return res.status(400).json({messsage: "Password do not match"})
-        };
-        const user = await userModel.findOne({where: {email: email.toLowerCase().trim(), otpVerified: true}})
 
-        const saltRound = await bcrypt.genSalt(10);
-        const hashedPW = await bcrypt.hash(confirmPassword, saltRound);
-        
-        const updatedPW =  {password: hashedPW, otp: null, otpVerified: false, otpExpiredAt: null}
-       
-        await user.update(updatedPW);
-        res.status(200).json({
-            message: "Password reset successful"
-        })
-    } catch (error) {
-        console.log(error.message)
-        res.status(500).json({
-            message: 'Internal Server Error',
-            error: 'Error resetting password' + error.message
-        })  
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({ message: "Passwords do not match" });
     }
+
+    const user = await userModel.findOne({
+      email: email.toLowerCase().trim(),
+      otpVerified: true
+    }).select("+password");
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found or OTP not verified" });
+    }
+
+    // Hash new password
+    const saltRound = await bcrypt.genSalt(10);
+    const hashedPW = await bcrypt.hash(newPassword, saltRound);
+
+    user.password = hashedPW;
+    user.otp = null;
+    user.otpVerified = false;
+    user.otpExpiredAt = null;
+
+    await user.save(); 
+
+    return res.status(200).json({
+      message: "Password reset successful"
+    });
+  } catch (error) {
+    console.log(error.message);
+    return res.status(500).json({
+      message: "Internal Server Error",
+      error: "Error resetting password: " + error.message
+    });
+  }
 };
+
 
 exports.changePassword = async (req, res) => {
   try {
@@ -289,36 +304,39 @@ exports.changePassword = async (req, res) => {
     }
 
     const id = req.user.id;
-    const user = await userModel.findByPk(id);
-    if (!user) return res.status(404).json({ message: "User not found" });
 
+    // Mongoose: find user by ID
+    const user = await userModel.findById(id).select("+password");
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Validate old password
     const validOld = await bcrypt.compare(oldPassword, user.password);
     if (!validOld) {
-      return res.status(400).json({
-        message: "Old password is incorrect",
-      });
+      return res.status(400).json({ message: "Old password is incorrect" });
     }
 
+    // Prevent reusing old password
     const sameAsOld = await bcrypt.compare(newPassword, user.password);
     if (sameAsOld) {
-      return res.status(400).json({
-        message: "You cannot reuse your previous password",
-      });
+      return res.status(400).json({ message: "You cannot reuse your previous password" });
     }
 
+    // Check confirm password
     if (newPassword !== confirmPassword) {
-      return res.status(400).json({
-        message: "New passwords must match",
-      });
+      return res.status(400).json({ message: "New passwords must match" });
     }
 
+    // Hash and update password
     const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(confirmPassword, salt);
-    await user.update({ password: hashedPassword });
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
 
-    return res.status(200).json({
-      message: "Password successfully changed",
-    });
+    user.password = hashedPassword;
+    await user.save();  // Mongoose save()
+
+    res.status(200).json({ message: "Password successfully changed" });
+
   } catch (error) {
     console.error(error.message);
     res.status(500).json({
@@ -331,35 +349,33 @@ exports.changePassword = async (req, res) => {
 exports.getOneUser = async (req, res) => {
     try {
         const userId = req.params.id;
-        const user = await userModel.findOne({
-       attributes: { exclude: ['password', 'otp', 'otpExpiredAt', 'otpVerified'] },
-       where: { id: userId },
-      });
+
+        const user = await userModel.findById(userId).select("-password -otp -otpExpiredAt -otpVerified");
 
         if (!user) {
             return res.status(404).json({
-                message: 'User not found'
+                message: "User not found"
             });
         }
+
         res.status(200).json({
-            message: 'User retrieved successfully',
+            message: "User retrieved successfully",
             data: user
         });
+
     } catch (error) {
-        console.log(error.message);
+        console.error(error.message);
         res.status(500).json({
-            message: 'Internal Server Error',
+            message: "Internal Server Error",
             error: error.message
         });
     }
 };
 
+
 exports.getAll = async (req, res) => {
   try {
-    const allUsers = await userModel.findAll({
-      attributes: { exclude: ['password', 'otp', 'otpExpiredAt', 'otpVerified'] }
-    });
-
+    const allUsers = await userModel.find().select("-password -otp -otpExpiredAt -otpVerified");
     if (allUsers.length < 1) {
       return res.status(200).json({
         message: "User's database is empty"
@@ -383,7 +399,7 @@ exports.update = async (req, res) => {
     const { firstName, lastName, bio } = req.body;
     const id = req.user.id;
     const file = req.file;
-    const user = await userModel.findByPk(id);
+    const user = await userModel.findById(id);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
@@ -403,15 +419,12 @@ exports.update = async (req, res) => {
         url: result.secure_url,
       };
     }
+      user.firstName = firstName || user.firstName;
+      user.lastName = lastName || user.lastName;
+      user.profileImage = image || user.profileImage;
+      user.bio = bio || null;
 
-    const updatedFields = {
-      firstName: firstName || user.firstName,
-      lastName: lastName || user.lastName,
-      profileImage: image || user.profileImage,
-      bio: bio || null
-    };
-
-    await user.update(updatedFields);
+    await user.save();
 
     res.status(200).json({
       message: 'User updated successfully',
@@ -425,21 +438,27 @@ exports.update = async (req, res) => {
     });
   }
 };
-
 exports.deleteUser = async (req, res) => {
     try {
-        const {id} = req.params;
-        const user = await userModel.findByPk(id);
-        if(!user){
-            return res.status(404).json({message: 'User not found'});
+        const { id } = req.params;
+
+        // Mongoose: find user by ID
+        const user = await userModel.findById(id);
+
+        if (!user) {
+            return res.status(404).json({
+                message: "User not found"
+            });
         }
-        await userModel.destroy({where: {id}});
+        await userModel.findByIdAndDelete(id);
+
         res.status(200).json({
-            message: 'User deleted successfully'
-        })
+            message: "User deleted successfully"
+        });
+
     } catch (error) {
         res.status(500).json({
-            message: 'Internal Server Error',
+            message: "Internal Server Error",
             error: error.message
         });
     }

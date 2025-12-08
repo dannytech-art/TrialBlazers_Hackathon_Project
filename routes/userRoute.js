@@ -1,10 +1,7 @@
 const { resendCode, login, register, home, forgotPassword, resetPassword, verifyEmail, verifyResetPasswordOtp, changePassword, getOneUser, getAll, update, deleteUser, auth, user, success, failure} = require('../controllers/userController');
-// const {makeAdmin} = require('../controllers/adminController')
 const { authenticated } = require('../middleware/authenticate');
 const { registerValidator, verifyValidator, resendValidator } = require('../middleware/validator');
-
 const uploads = require('../middleware/multer');
-
 
 const router = require('express').Router();
 
@@ -608,20 +605,20 @@ router.get('/failure', failure);
  * /api/v1/user/{id}:
  *   get:
  *     summary: Get a single user by ID
- *     description: Retrieve a user's information by their unique ID. Password and sensitive fields are excluded from the response.
+ *     description: Retrieves a user's details by their ID. Excludes password, OTP, and verification fields.
  *     tags:
  *       - Users
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
- *         description: The unique ID of the user.
+ *         description: The ID of the user to retrieve
  *         schema:
  *           type: string
- *           example: 1d2a3b4c-5d6e-7f8g-9h0i-123456abcdef
+ *           example: 692810a6ca635ffc7d37f016
  *     responses:
  *       200:
- *         description: User retrieved successfully.
+ *         description: User retrieved successfully
  *         content:
  *           application/json:
  *             schema:
@@ -633,9 +630,9 @@ router.get('/failure', failure);
  *                 data:
  *                   type: object
  *                   properties:
- *                     id:
+ *                     _id:
  *                       type: string
- *                       example: 1d2a3b4c-5d6e-7f8g-9h0i-123456abcdef
+ *                       example: 692810a6ca635ffc7d37f016
  *                     firstName:
  *                       type: string
  *                       example: John
@@ -644,21 +641,12 @@ router.get('/failure', failure);
  *                       example: Doe
  *                     email:
  *                       type: string
- *                       example: johndoe@example.com
- *                     role:
+ *                       example: johndoe@gmail.com
+ *                     phone:
  *                       type: string
- *                       example: Client
- *                     profileImage:
- *                       type: string
- *                       example: https://res.cloudinary.com/demo/image/upload/v1/profile.jpg
- *                     rating:
- *                       type: number
- *                       example: 4.8
- *                     totalJobs:
- *                       type: integer
- *                       example: 25
+ *                       example: +2348012345678
  *       404:
- *         description: User not found.
+ *         description: User not found
  *         content:
  *           application/json:
  *             schema:
@@ -667,6 +655,19 @@ router.get('/failure', failure);
  *                 message:
  *                   type: string
  *                   example: User not found
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Internal Server Error
+ *                 error:
+ *                   type: string
+ *                   example: Something went wrong on the server
  */
 router.get('/user/:id', getOneUser);
 
@@ -821,17 +822,17 @@ router.put('/update', authenticated, uploads.single('profileImage'), update);
  * /api/v1/delete-user/{id}:
  *   delete:
  *     summary: Delete a user by ID
- *     description: Permanently removes a user record from the database by their unique ID.
+ *     description: Permanently deletes a user from the database using their ID.
  *     tags:
  *       - Users
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
- *         description: UUID of the user to be deleted
+ *         description: The ID of the user to delete
  *         schema:
  *           type: string
- *           example: 1d2a3b4c-5d6e-7f8g-9h0i-123456abcdef
+ *           example: 692810a6ca635ffc7d37f016
  *     responses:
  *       200:
  *         description: User deleted successfully
@@ -853,6 +854,19 @@ router.put('/update', authenticated, uploads.single('profileImage'), update);
  *                 message:
  *                   type: string
  *                   example: User not found
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Internal Server Error
+ *                 error:
+ *                   type: string
+ *                   example: Something went wrong on the server
  */
 router.delete('/delete-user/:id', deleteUser);
 

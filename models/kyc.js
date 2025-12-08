@@ -1,80 +1,56 @@
-const { Sequelize, DataTypes, Model, UUIDV4 } = require('sequelize');
-const sequelize = require('../database/databases');
+const mongoose = require('mongoose');
 
-class KYC extends Model {}
-
-KYC.init(
+const KYCSchema = new mongoose.Schema(
   {
-    id: {
-      allowNull: false,
-      primaryKey: true,
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
-    },
     userId: {
-      type: DataTypes.UUID,
-      allowNull: false,
-      references: {
-        model: 'Users',
-        key: 'id',
-      },
-      onDelete: 'CASCADE', // ensures KYC is deleted if user is removed
-      onUpdate: 'CASCADE',
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
     },
+
     governmentIdCard: {
-      type: DataTypes.TEXT,
-      allowNull: true,
-      get() {
-        const rawValue = this.getDataValue('governmentIdCard');
-        return rawValue ? JSON.parse(rawValue) : null;
-      },
-      set(value) {
-        this.setDataValue('governmentIdCard', JSON.stringify(value));
-      },
+      type: mongoose.Schema.Types.Mixed,
+      default: null,
     },
+
     proofOfAddressImage: {
-      type: DataTypes.TEXT,
-      allowNull: true,
-      get() {
-        const rawValue = this.getDataValue('proofOfAddressImage');
-        return rawValue ? JSON.parse(rawValue) : null;
-      },
-      set(value) {
-        this.setDataValue('proofOfAddressImage', JSON.stringify(value));
-      },
+      type: mongoose.Schema.Types.Mixed,
+      default: null,
     },
+
     selfieWithIdCard: {
-      type: DataTypes.TEXT,
-      allowNull: true,
-      get() {
-        const rawValue = this.getDataValue('selfieWithIdCard');
-        return rawValue ? JSON.parse(rawValue) : null;
-      },
-      set(value) {
-        this.setDataValue('selfieWithIdCard', JSON.stringify(value));
-      },
+      type: mongoose.Schema.Types.Mixed,
+      default: null,
     },
+
     status: {
-      type: DataTypes.ENUM('pending', 'approved', 'rejected', 'verified'),
-      allowNull: false,
-      defaultValue: 'pending',
+      type: String,
+      enum: ['pending', 'approved', 'rejected', 'verified'],
+      default: 'pending',
     },
+
     reviewedBy: {
-      type: DataTypes.UUID,
-      allowNull: true, // could reference an admin or system user
-      references: {
-        model: 'Admins',
-        key: 'id',
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Admin', 
+      default: null, 
     },
-    onDelete: 'SET NULL',
-    onUpdate: 'CASCADE',
   },
-},
-  {
-    sequelize,
-    modelName: 'KYCs',
-    timestamps: true,
-  }
+  { timestamps: true }
 );
+
+// Optional getters/setters (preserves your Sequelize JSON behavior)
+KYCSchema.path('governmentIdCard').get(function (value) {
+  return value || null;
+});
+
+KYCSchema.path('proofOfAddressImage').get(function (value) {
+  return value || null;
+});
+
+KYCSchema.path('selfieWithIdCard').get(function (value) {
+  return value || null;
+});
+
+const KYC = mongoose.model('KYC', KYCSchema);
 
 module.exports = KYC;
